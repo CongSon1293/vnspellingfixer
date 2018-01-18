@@ -7,7 +7,9 @@ bigram_fixing = BigramFixing.load()
 sen = "Sentence tobe fixed"
 fixed_bare_sen,ref_accent_sen = bigram_fixing.fix(sen)
 ```
+
 ##Data
+
 Dir: models/data
  * full_vocabulary.txt: Vocaburaly file
 Dir: models/data/inp
