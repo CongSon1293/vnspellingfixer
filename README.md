@@ -8,11 +8,14 @@ sen = "Sentence tobe fixed"
 fixed_bare_sen,ref_accent_sen = bigram_fixing.fix(sen)
 ```
 
-##Data
+## Data
 
 Dir: models/data
+
  * full_vocabulary.txt: Vocaburaly file
+ 
 Dir: models/data/inp
+
  * common_fixing: contains common fixing with the syntax of each line:
  ```
     (wrong word)\t(true word)
@@ -25,7 +28,7 @@ Dir: models/data/inp
  * special_tokens: contains special single token
  * speical_words: contains special words
  
- ## Training:
+## Training:
  ```
 from vnbarefixing.bigram_fixing import BigramFixing
 BigramFixing.train(data="",path="")
