@@ -109,7 +109,7 @@ def extract_wrong_words():
             print "Wrong",c
         #exit(-1)
     wrong_words_counters = dict()
-    from load_products import load_questions
+    from load_data import load_questions
     questions = load_questions()
     for q in  questions:
         q = unicode(q).lower()
@@ -185,10 +185,10 @@ def fix_wrong_words_heuristic(data="",path=""):
     if data != "":
         questions = data
     elif path != "":
-        from load_products import load_question_from_file
+        from load_data import load_question_from_file
         questions = load_question_from_file(path)
     else:
-        from load_products import load_questions
+        from load_data import load_questions
         questions = load_questions()
     f_fix = open("%s/models/data/out/fixing"%cdir,"w",encoding="utf-8")
     bi_forward = dict()

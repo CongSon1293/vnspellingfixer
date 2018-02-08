@@ -67,7 +67,13 @@ def lcs(a, b):
             x -= 1
             y -= 1
     return result
-
+def fitler_dict_couter(d,dmin):
+    d2 = {}
+    for k,v in d.iteritems():
+        if v >= dmin:
+            d2[k] = v
+    del d
+    return d2
 
 def pickle_save(object, path):
     pickle.dump(object, open("%s" % (path), "wb"))
@@ -79,6 +85,12 @@ def sort_dict(dd):
     for key, value in sorted(dd.iteritems(), key=lambda (k, v): (v, k)):
         kvs.append([key, value])
     return kvs[::-1]
+def sort_dict_idx(dd,idx=2):
+    kvs = []
+    for key, value in sorted(dd.iteritems(), key=lambda (k, v): (v[idx], k)):
+        kvs.append([key, value])
+    return kvs[::-1]
+
 
 def sort_array_indices(ar):
     sorted_args = numpy.argsort(ar)[::-1]
@@ -91,6 +103,12 @@ def add_dict_counter(d,e):
         d[e] += 1
     except:
         d[e] = 1
+def get_zero_dict(d,k):
+    try:
+        v = d[k]
+    except:
+        v = 0
+    return v
 def get_dict_element(d,k):
     try:
         v = d[k]

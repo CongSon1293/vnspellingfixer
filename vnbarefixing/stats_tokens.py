@@ -1,5 +1,5 @@
 from tokenizer.tokenizer import Tokenizer
-from load_products import load_questions
+from load_data import load_questions
 from vocabulary import Vocabulary
 from io import open
 import utils

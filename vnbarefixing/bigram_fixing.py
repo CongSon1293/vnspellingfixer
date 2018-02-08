@@ -8,19 +8,19 @@ import editdistance
 import utils
 import math
 import os
-import vnbarenorm
+import stats_bare_bigram
 from unigram_fixing import UnigramFixing
 class BigramFixing():
     def __init__(self):
         self.cdir = os.path.abspath(os.path.dirname(__file__))
         self.unigram_fixing = UnigramFixing()
         self.vn_vocab, self.vn_bare_vocab, self.vn_long_vocab, self.vn_long_bare_vocab \
-            = vnbarenorm.load_vn_vocab()
-        self.vn_special_words = vnbarenorm.load_special_words()
+            = stats_bare_bigram.load_vn_vocab()
+        self.vn_special_words = stats_bare_bigram.load_special_words()
         self.vn_true_bare_bigram_hie_ddict = utils.pickle_load("%s/models/data/out/hierachical_true_dict.pkl"%self.cdir)
         self.vn_true_bare_bigram_f_ddict = utils.pickle_load("%s/models/data/out/hierachical_true_first_ab_dict.pkl"%self.cdir)
 
-        self.hard_fixing_map = vnbarenorm.load_hard_fixing()
+        self.hard_fixing_map = stats_bare_bigram.load_hard_fixing()
         self.load_one_fix()
     def load_one_fix(self,path="models/data/out/rule_one_fix.dat"):
         path = "%s/%s"%(self.cdir,path)
@@ -51,8 +51,8 @@ class BigramFixing():
         print "\t Unigram stats..."
         fix_wrong_words_heuristic(data,path)
         print "\t Bigram stast..."
-        from vnbarenorm import stats_bigram,stats
-        stats(data,path)
+        from stats_bare_bigram import stats_bigram,stats
+        stats(data,path,using_news=True)
         stats_bigram()
         print "\t Creating model..."
         bigram = BigramFixing()
@@ -69,8 +69,8 @@ class BigramFixing():
         qs = qs.lower()
         qs = self.unigram_fixing.fix(qs)
 
-        qs = vnbarenorm.norm_fix_common(qs,self.one_fix_map)
-        _tokens = vnbarenorm.split_sentece(qs)
+        qs = stats_bare_bigram.norm_fix_common(qs, self.one_fix_map)
+        _tokens = stats_bare_bigram.split_sentece(qs)
 
 
 
@@ -88,7 +88,7 @@ class BigramFixing():
         for i in xrange(len(tokens)-1):
             bigram = u"%s %s"%(tokens[i],tokens[i+1])
             #print "\t%s"%bigram
-            if vnbarenorm.is_wrong_bare_bigram_candidates(bigram,self.vn_bare_vocab,self.vn_special_words):
+            if stats_bare_bigram.is_wrong_bare_bigram_candidates(bigram, self.vn_bare_vocab, self.vn_special_words):
 
                 #print bigram
                 d_candidates = {}
@@ -108,16 +108,16 @@ class BigramFixing():
                     try:
                         d_candidates[candidate]
                     except:
-                        sim_score = vnbarenorm.cal_sim_score(bigram, candidate, counter)
+                        sim_score = stats_bare_bigram.cal_sim_score(bigram, candidate, counter)
                         if sim_score < 0.7:
                             continue
-                        d_candidates[candidate] = vnbarenorm.cal_sim_score(bigram, candidate, counter)
+                        d_candidates[candidate] = stats_bare_bigram.cal_sim_score(bigram, candidate, counter)
 
                 if len(d_candidates) == 0:
                     continue
                 sorted_score = utils.sort_dict(d_candidates)
 
-                #print sorted_score
+                print sorted_score
 
                 if sorted_score[0][1] > 1:# and sorted_score[1][1] < 1:
                     repl = sorted_score[0][0]
@@ -141,7 +141,7 @@ def loop():
         print u"\tAccent ref: %s"%back_ref
 def fix_question():
     bi_gram_fixing = BigramFixing()
-    from load_products import load_questions
+    from load_data import load_questions
     questions = load_questions()
 
     f = open("stats/bare_question_fixing.dat","w",encoding="utf-8")
@@ -161,6 +161,8 @@ def fix_question():
     f.write("\n Done")
 
 if __name__ == "__main__":
+    print "Training..."
+    BigramFixing.train()
     #bigram = BigramFixing.load()
     bigram = BigramFixing()
     bigram.save()

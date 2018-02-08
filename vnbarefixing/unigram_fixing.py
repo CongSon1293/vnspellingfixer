@@ -46,7 +46,7 @@ def vn_fix():
     common_fixing.load_from_file()
 
 
-    from load_products import load_questions
+    from load_data import load_questions
     questions = load_questions()
     f_fix = open("q_fixing", "w", encoding="utf-8")
     question_norm1 = []
