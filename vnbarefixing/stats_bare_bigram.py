@@ -138,6 +138,7 @@ def test():
         =load_vn_vocab()
     print vn_long_bare_vocab
 
+
 def norm_fix_common(sen,fix_map):
     _tokens = split_sentece(sen)
     fixies = []
@@ -149,6 +150,7 @@ def norm_fix_common(sen,fix_map):
             tnorm = norm_token(tk)
             fixies.append(tnorm)
     return " ".join(fixies)
+
 
 def is_wrong_bare_bigram_candidates(bare_bigram,vn_bare_vocab,vn_speical_words=""):
     if vn_speical_words != "":
@@ -299,7 +301,7 @@ def cal_sim_score(src, cand, ref_score=0):
     l = 0.5*(1.0/len(src)+1.0/len(cand))
     l2 = max(len(src),len(cand))
     #count = len(utils.lcs(src, cand)) * 1.0 + 1 - editdistance.eval(src,cand)*l
-    count = utils.lcs2(src, cand) * 1.0 + 1 +  math.log(1.0/(1.2+ editdistance.eval(src,cand)))
+    count = utils.lcs2(src, cand) * 1.0 + 1.05 +  math.log(1.0/(1.2+ editdistance.eval(src,cand)))
 
     #count = l - editdistance.eval(src,cand)
     if src[0] == cand[0]:

@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Bare spelling correcting service</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css"
+          integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+
+    <!--
+        <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+    -->
+
+    <link rel="stylesheet" href="custom/custom.css">
+
+</head>
+<body>
+
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js"
+        integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh"
+        crossorigin="anonymous"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"
+        integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ"
+        crossorigin="anonymous"></script>
+
+<!--
+<script src="bootstrap/js/bootstrap.min.js"></script>
+-->
+
+<div class="container">
+    <div class="row">
+
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <h3 class="text-center">Sua loi chinh ta khong dau</h3>
+            <h5 class="text-center">Version 1.0</h5>
+            <h4 class="text-center">&copy; ML-BKA Team</h4>
+
+        </div>
+    </div>
+    <!-- Content here -->
+    <div class="row">
+        <div class="col-5">
+            <!--
+                        <form id="nerform" action="/ner" method="post">
+            -->
+            <div class="form-group">
+                <label>Nhap cau khong dau:</label>
+                <textarea class="form-control" id="sentenceTobeFixed" rows="2"
+                          oninput="clearResultOnChange()"></textarea>
+                <!--  <label class="form-check-label">
+                      <input class="form-check-input" type="checkbox" value="">
+                  </label>-->
+            </div>
+
+            <!--
+                        </form>
+            -->
+        </div>
+        <div class="col-2 text-center">
+
+            <div class="mt-5">
+                <button type="button" class="btn btn-primary mt-1" id="send">Gửi</button>
+            </div>
+
+        </div>
+
+        <div class="col-5">
+            <div class="form-group">
+                <label>Ket qua:</label>
+
+                <textarea class="form-control form-rounded" rows="2" readonly id="fixResult"></textarea>
+            </div>
+
+        </div>
+
+    </div>
+
+    <br/>
+</div>
+<script type='text/javascript'>
+   $("#sentenceTobeFixed").on("keypress",function(e) {
+    var key = e.keyCode;
+
+    // If the user has pressed enter
+    if (key == 13) {
+        e.preventDefault();
+        $("#send").click()
+        return;
+
+
+    }
+
+});
+
+    //Click handler:
+    $("#send").click(function(){
+     $("#send").html("...")
+     var url = "/fix"
+     var posting = $.post( url, { sen: $('#sentenceTobeFixed').val() } );
+     console.log("Sen: "+$('#sentenceTobeFixed').val())
+
+      /* Alerts the results */
+      posting.done(function( data ) {
+        //alert('success');
+        $("#fixResult").val(data);
+        $("#send").html("Gửi");
+
+
+
+      });
+    });
+
+    function clearResultOnChange(){
+        $("#fixResult").val("");
+        $("#send").html("Gửi");
+
+
+    }
+
+
+
+
+
+</script>
+</body>
+</html>

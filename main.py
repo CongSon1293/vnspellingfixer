@@ -1,21 +1,41 @@
 # -*- coding: utf-8 -*-
 
 import os
-if __name__ == "__main__":
-    #from vnbarefixing import load_data
-    #load_data.split_news_sentence()
-    #exit(-1)
+def loop(bigram_model):
+    while True:
+        s = raw_input("Input: ")
+        if len(s) > 4:
+            fixed_sen, back_ref = bigram_model.fix(s)
+            print s
+            print fixed_sen
+def old_fix():
     from vnbarefixing.bigram_fixing import BigramFixing
 
-    if __name__ == "__main__":
-        #print "Training..."
-        #BigramFixing.train()
-        #exit(-1)
-        #bigram = BigramFixing()
-        #bigram.save()
-        bigram = BigramFixing.load()
-        sen = u"Cửa hàg có bán đệin thoại  khôg??"
-        fixed_sen, back_ref = bigram.fix(sen)
-        print sen
-        print fixed_sen
-        print back_ref
+    #print "Training..."
+    #BigramFixing.train()
+    #exit(-1)
+    #bigram = BigramFixing()
+    #bigram.save()
+    bigram = BigramFixing.load()
+    loop(bigram)
+def general_fix(pre_vocab = True,loop=True):
+
+    if not pre_vocab:
+        from general_spelling_corrector.vocabulary import Vocaburaly
+        vocab = Vocaburaly()
+        vocab.init()
+        vocab.save()
+    if loop:
+        from general_spelling_corrector.corrector import Corrector
+        corrector = Corrector()
+        while True:
+            inp = raw_input("Enter: ")
+            if len(inp) > 4:
+                fix,back_ref = corrector.fix_general_bigram(inp)
+                print fix
+
+
+
+
+if __name__ == "__main__":
+    general_fix(pre_vocab=True)
