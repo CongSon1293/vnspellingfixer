@@ -19,6 +19,7 @@ class UnigramFixing():
 
         self.common_fixing = CommonRegex()
         self.common_fixing.load_from_file()
+
     def fix(self,sen,is_lower=True):
         qs = sen
         if not is_lower:

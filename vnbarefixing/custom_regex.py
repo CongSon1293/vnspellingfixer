@@ -49,20 +49,24 @@ class CommonRegex():
         self.s_regex = dict()
     def load_from_file(self,path="models/data/inp/common_fixing"):
         dir_path = os.path.dirname(os.path.realpath(__file__))
+        try:
 
-        f = open("%s/%s" % (dir_path, path), "r", encoding="utf-8")
-        while True:
-            line = f.readline()
-            if line == "":
-                break
-            if line[0] == "#":
-                continue
-            line = unicodedata.normalize("NFC", line.strip())
-            parts = line.split(u"\t")
-            reg = re.compile(ur"\b%s\b" % parts[0], re.UNICODE)
-            # print parts[0],"---",parts[1]
-            self.s_regex[reg] = u"%s"%parts[1]
-        f.close()
+            f = open("%s/%s" % (dir_path, path), "r", encoding="utf-8")
+            while True:
+                line = f.readline()
+                if line == "":
+                    break
+                if line[0] == "#":
+                    continue
+                line = unicodedata.normalize("NFC", line.strip())
+                parts = line.split(u"\t")
+                reg = re.compile(ur"\b%s\b" % parts[0], re.UNICODE)
+                # print parts[0],"---",parts[1]
+                self.s_regex[reg] = u"%s"%parts[1]
+            f.close()
+        except:
+            print "An error occurred while loadinng common fixing from %s"%path
+            pass
 
     def replace(self, sen):
         q = sen

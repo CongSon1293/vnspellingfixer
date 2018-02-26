@@ -1,16 +1,23 @@
 # -*- coding: utf-8 -*-
 
 import os
-if __name__ == "__main__":
+def train():
+    from vnbarefixing.bigram_fixing import BigramFixing
+    BigramFixing.train()
+    exit(-1)
+
+
+def loop():
     from vnbarefixing.bigram_fixing import BigramFixing
 
-    if __name__ == "__main__":
-        #BigramFixing.train()
-        bigram = BigramFixing()
-        bigram.save()
-        bigram = BigramFixing.load()
-        sen = u"Điện thoại này có kinh cường lực ko"
-        fixed_sen, back_ref = bigram.fix(sen)
-        print sen
-        print fixed_sen
-        print back_ref
+    bigram = BigramFixing.load()
+    while True:
+        inp = raw_input("Enter: ")
+        if len(inp)>4:
+            fixed_sen, back_ref = bigram.fix(inp)
+            print fixed_sen
+            print back_ref
+
+if __name__ == "__main__":
+
+    loop()

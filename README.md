@@ -15,6 +15,10 @@ Dir: models/data
  * full_vocabulary.txt: Vocaburaly file
  
 Dir: models/data/inp
+ * new_fixing: contains new fixs, this file is reloaded each time the fixer is initialized without retraining. The syntax of each line:
+  ```
+    (wrong word)\t(true word)
+```
 
  * common_fixing: contains common fixing with the syntax of each line:
  ```
@@ -28,6 +32,7 @@ Dir: models/data/inp
  * special_tokens: contains special single token
  * speical_words: contains special words
  
+
 ## Training:
  ```
 from vnbarefixing.bigram_fixing import BigramFixing
@@ -35,4 +40,5 @@ BigramFixing.train(data="",path="")
 #data is a list of unicode sentences
 #path specifies the file saving sentences
 #only select one of them
+
 ```

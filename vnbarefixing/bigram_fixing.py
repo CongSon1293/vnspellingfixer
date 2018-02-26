@@ -43,7 +43,9 @@ class BigramFixing():
     def load(path="models/bigramfixing.dat"):
         dir = os.path.abspath(os.path.dirname(__file__))
         path = "%s/%s"%(dir,path)
-        return utils.pickle_load(path)
+        bigram_fixer =  utils.pickle_load(path)
+        bigram_fixer.unigram_fixing.common_fixing.load_from_file(path="models/data/inp/new_fixing")
+        return bigram_fixer
     @staticmethod
     def train(data="",path=""):
         print "Training..."
