@@ -4,7 +4,7 @@ import optparse
 from flask import Flask
 from flask import request
 
-from spelling_corrector.general_bare_corrector.general_bare_corrector import GeneralBareCorrector
+from spelling_corrector.general_bare_corrector.corrector import GeneralBareCorrector
 
 app = Flask(__name__, static_url_path='',
             static_folder='static',

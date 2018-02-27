@@ -25,7 +25,7 @@ def general_fix(pre_vocab = True,loop=True):
         vocab.init()
         vocab.save()
     if loop:
-        from spelling_corrector.general_bare_corrector.general_bare_corrector import GeneralBareCorrector
+        from spelling_corrector.general_bare_corrector.corrector import GeneralBareCorrector
         corrector = GeneralBareCorrector()
         while True:
             inp = raw_input("Enter: ")
@@ -37,5 +37,5 @@ def general_fix(pre_vocab = True,loop=True):
 
 
 if __name__ == "__main__":
-    general_fix(pre_vocab=True)
+    general_fix(pre_vocab=False)
     #old_fix()

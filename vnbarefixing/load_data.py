@@ -24,7 +24,7 @@ def split_news_sentence():
     sentences = []
     import sys
     sys.path.insert(0, '..')
-    from spelling_corrector.vnspliter.sentence_spliter import SentenceSpliter
+    from spelling_corrector import SentenceSpliter
     spliter = SentenceSpliter()
     cc = 0
     fout = open("%s/Sentences_Lines.dat"%DATA_DIR,"w",encoding="utf-8")
@@ -57,7 +57,7 @@ def load_news_data(is_reload=True):
     sentences = []
     import sys
     sys.path.insert(0, '..')
-    from spelling_corrector.vnspliter.sentence_spliter import SentenceSpliter
+    from spelling_corrector import SentenceSpliter
     spliter = SentenceSpliter()
     cc = 0
     while True:
