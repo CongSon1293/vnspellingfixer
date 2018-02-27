@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import os
 def loop(bigram_model):
     while True:
         s = raw_input("Input: ")
@@ -21,13 +20,13 @@ def old_fix():
 def general_fix(pre_vocab = True,loop=True):
 
     if not pre_vocab:
-        from general_spelling_corrector.vocabulary import Vocaburaly
+        from spelling_corrector.general_bare_corrector.vocabulary import Vocaburaly
         vocab = Vocaburaly()
         vocab.init()
         vocab.save()
     if loop:
-        from general_spelling_corrector.corrector import Corrector
-        corrector = Corrector()
+        from spelling_corrector.general_bare_corrector.general_bare_corrector import GeneralBareCorrector
+        corrector = GeneralBareCorrector()
         while True:
             inp = raw_input("Enter: ")
             if len(inp) > 4:

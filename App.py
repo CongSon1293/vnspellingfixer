@@ -1,9 +1,10 @@
-from flask import Flask, render_template
-from flask import request
-
 import HTMLParser
 import optparse
-from general_spelling_corrector.corrector import Corrector
+
+from flask import Flask
+from flask import request
+
+from spelling_corrector.general_bare_corrector.general_bare_corrector import GeneralBareCorrector
 
 app = Flask(__name__, static_url_path='',
             static_folder='static',
@@ -14,7 +15,7 @@ spelling_corrector = None
 
 def init_model():
    global spelling_corrector
-   spelling_corrector = Corrector()
+   spelling_corrector = GeneralBareCorrector()
 
 @app.route('/')
 def start():

@@ -24,7 +24,7 @@ def split_news_sentence():
     sentences = []
     import sys
     sys.path.insert(0, '..')
-    from vnspliter.sentence_spliter import SentenceSpliter
+    from spelling_corrector.vnspliter.sentence_spliter import SentenceSpliter
     spliter = SentenceSpliter()
     cc = 0
     fout = open("%s/Sentences_Lines.dat"%DATA_DIR,"w",encoding="utf-8")
@@ -57,7 +57,7 @@ def load_news_data(is_reload=True):
     sentences = []
     import sys
     sys.path.insert(0, '..')
-    from vnspliter.sentence_spliter  import SentenceSpliter
+    from spelling_corrector.vnspliter.sentence_spliter import SentenceSpliter
     spliter = SentenceSpliter()
     cc = 0
     while True:
@@ -76,8 +76,68 @@ def load_news_data(is_reload=True):
     print "\t\t\tLoaded total %s sentences of %s docs"%(len(sentences),cc)
     return sentences
 
+def export_question_answer_sentences():
+
+    import re
+    re_ldots = re.compile("\.\.\.", re.UNICODE)
+    re_markers = re.compile("[?,;!]")
+    re_dotspace = re.compile("\.")
+
+    def norm_paragraph(para):
+        para = para.replace("\r","")
+        para = para.replace("\n",". ")
+        para = re_ldots.sub(".",para)
+        para = re_markers.sub(".",para)
+        para = re_dotspace.sub(" . ",para)
+        return para
+    def split_paragraph(para):
+        sentences = para.split(" . ")
+        return sentences
+
+    def export():
+        fin = open("%s/models/data/inp/fpt_mobiles_product_and_qa.dat" % cdir, "r")
+        fout = open("%s/fpt_shop_mobile.dat"%cdir,"w",encoding="utf-8")
+
+        while True:
+            line = fin.readline()
+            if line == "":
+                break
+            s = json.loads(line.strip())
+            try:
+                title = s['title']
+                qas = s['comments']
+                for qa in qas:
+                    try:
+                        question = qa[0]
+                        para = norm_paragraph(question)
+                        sentences = split_paragraph(para)
+                        for sen in sentences:
+                            sen = sen.strip()
+                            if len(sen) < 3:
+                                continue
+
+                            fout.write(u"%s\n"%sen)
+                    except:
+                        pass
+                    try:
+                        answer = qa[1]
+                        para = norm_paragraph(answer)
+                        sentences = split_paragraph(para)
+                        for sen in sentences:
+                            sen = sen.strip()
+                            if len(sen)<3:
+                                continue
+                            fout.write(u"%s\n"%sen)
+                    except:
+                        pass
 
 
+            except Exception as e:
+                continue
+
+        fin.close()
+        fout.close()
+    export()
 def load_questions():
 
     fin = open("%s/models/data/inp/fpt_mobiles_product_and_qa.dat"%cdir, "r")
@@ -161,4 +221,5 @@ def load_products():
     print "Done"
 
 if __name__=="__main__":
-    load_questions2()
+    #load_questions2()
+    export_question_answer_sentences()
