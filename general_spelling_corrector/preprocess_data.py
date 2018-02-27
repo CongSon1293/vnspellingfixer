@@ -6,17 +6,24 @@ from io import open
 
 cdir = os.path.abspath(os.path.dirname(__file__))
 
-'''
-    Product data structure:
-    Json:
-    {
-        title: "Title"
-        {key-property: Ram, CPU,Monitor...} : "Value"
-        commments: List-Of-Question-Answer-Pairs:[[Q1,A1],[Q2,A2],[Q3,A3],...]
-    }
-'''
 DATA_DIR = "/home/nda/Data/Data_NLP"
+DATA_SOURCE = "/home/nda/Data/Text/Articles"
 NEWS_SENTENCES_DATA = "Sentences_Lines.dat"
+SUBTITLES_DATA_SOURCCE = "sub_film.txt"
+SUBTITLES_EXPORT_DATA = "norm_sub_film.dat"
+
+def export_subtitles():
+    fin = open("%s/%s"%(DATA_SOURCE,SUBTITLES_DATA_SOURCCE),"r")
+    fout = open("%s/%s"%(DATA_DIR,SUBTITLES_EXPORT_DATA),"w")
+    while True:
+        line = fin.readline()
+        if line == "":
+            break
+        line = unicodedata.normalize("NFC", line)
+        fout.write(u"%s"%line)
+    fin.close()
+    fout.close()
+
 
 
 def split_news_sentence():
@@ -45,3 +52,7 @@ def split_news_sentence():
     fout.close()
     print "\t\t\tLoaded total %s sentences of %s docs" % (len(sentences), cc)
 
+if __name__ == "__main__":
+    #export_subtitles()
+    #split_news_sentence()
+    pass

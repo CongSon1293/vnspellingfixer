@@ -39,6 +39,8 @@ class Vocaburaly():
     def init(self):
         self.__load_true_vocab()
         self.__load_all_news_bi_words()
+        self.__load_all_subtitles_bi_words()
+        self.__merge_bigram_counter()
 
     def split_dot(self,token):
         res = []
@@ -109,6 +111,40 @@ class Vocaburaly():
             word = unicodedata.normalize("NFC", line.strip())
             self.add_true_vocab(word)
         f.close()
+
+    def __load_all_subtitles_bi_words(self):
+        subtitle_bigram = {}
+        from data_loader import get_subtitle_reader
+        subtitle_reader = get_subtitle_reader()
+        cc = 0
+        print "Loading subtitle bigrams..."
+        line  = subtitle_reader.readline()
+        while line != "":
+            cc += 1
+            if cc %100 == 0:
+                print "\r\t\t\t%s"%cc,
+            if cc >=10000000:
+                break
+            line = line.strip()
+            qs = line.lower()
+            tokens = []
+            _tokens = self.split_sentece(qs)
+            for token in _tokens:
+                token = utils.accent2bare(token)
+                tokens.append(token)
+
+            for i in xrange(len(tokens)):
+                if i < len(tokens) - 1:
+                    utils.add_dict_counter(subtitle_bigram, u"%s %s" % (tokens[i], tokens[i + 1]))
+            line = subtitle_reader.readline()
+        subtitle_reader.close()
+
+        print "\t\t: Subtitles stats:"
+        print "\t\t: Have %s bigrams" % len(subtitle_bigram)
+        self.subtitle_bigram = utils.fitler_dict_couter(subtitle_bigram, DMIN)
+
+        print "\t\t: After fitlering: %s" % len(self.subtitle_bigram)
+
     def __load_all_news_bi_words(self):
         news_bigram = {}
         from data_loader import get_news_sentence_reader
@@ -144,8 +180,11 @@ class Vocaburaly():
         self.news_bigram_counter = utils.fitler_dict_couter(news_bigram, DMIN)
 
         print "\t\t: After fitlering: %s" % len(self.news_bigram_counter)
+        #self.hierachical_first_char_dict = utils.generate_hierachical_first_alphabet_dict(self.news_bigram_counter)
+    def __merge_bigram_counter(self):
+        self.news_bigram_counter = utils.merge_counting_dict(self.news_bigram_counter,
+                                                             self.subtitle_bigram)
         self.hierachical_first_char_dict = utils.generate_hierachical_first_alphabet_dict(self.news_bigram_counter)
-
     def load_extended_true_bivocab(self,path="models/data/inp/extended_bivocab.dat"):
         path = "%s/%s"%(cdir,path)
         f = open(path,"r")

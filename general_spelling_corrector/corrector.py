@@ -1,6 +1,7 @@
 from vocabulary import Vocaburaly
 import utils
 from similarity_metrics import cal_sim_score
+from replaced_rules import ForcingReplace
 import re
 import math
 N_TOP_CANDIDATES = 4
@@ -15,6 +16,8 @@ class Corrector():
         else:
             self.vocab = Vocaburaly.load()
             self.vocab.load_extended_true_bivocab()
+        self.rule_fix = ForcingReplace()
+
     def __is_suitable_length(self,word,candidate,size=SIZE_VARIANT):
         if math.fabs(len(word)-len(candidate)) <= SIZE_VARIANT:
             return True
@@ -70,9 +73,13 @@ class Corrector():
         return wrong_bigram,0
 
 
+    def fix_rule(self,sen):
+        return self.rule_fix.replace(sen)
 
     def fix_general_bigram(self,sen):
 
+
+        sen = self.fix_rule(sen)
         _tokens = self.vocab.split_sentece(sen)
         back_ref = " ".join(_tokens)
 

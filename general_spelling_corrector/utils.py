@@ -127,7 +127,17 @@ def generate_hierachical_first_alphabet_dict(ddict):
                 hierachical_f_dict[c] = d
             d[k] = v
     return hierachical_f_dict
-
+def merge_counting_dict(d1,d2):
+    d3 = {}
+    for k,v in d1.iteritems():
+        d3[k] = v
+    for k,v in d2.iteritems():
+        try:
+            vv = d3[k]
+        except:
+            vv = 0
+        d3[k] = vv + v
+    return d3
 if __name__ == "__main__":
     s= accent2bare( u"mọt")
     #s2 = accent2bare(u"đk")
