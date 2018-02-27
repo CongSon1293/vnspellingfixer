@@ -4,7 +4,7 @@
 ```
 from spelling_corrector.general_bare_corrector.corrector import GeneralBareCorrector
 general_corrector = GeneralBareCorrectord()
-sen = "Sentence tobe fixed"
+inp = "Sentence tobe fixed"
 fix,back_ref = corrector.fix_general_bigram(inp)
 ```
 
