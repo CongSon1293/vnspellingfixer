@@ -1,4 +1,5 @@
 Method:
+0. Use hard rules to replace some common errors
 1. Normalize to bare format (No accent)
 2. Build true vocaburaly from a pre-vocabulary dataset
 3. Build bi-gram context from news dataset
