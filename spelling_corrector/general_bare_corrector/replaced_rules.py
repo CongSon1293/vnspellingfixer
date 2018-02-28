@@ -13,7 +13,7 @@ class ForcingReplace():
         self.rules = {}
         self.j_rules = {}
         self.__load_rules_from_file()
-        self.j_regex = re.compile(ur"(?P<BF>\w)j(?P<AT>\w*)",re.UNICODE)
+        self.j_regex = re.compile(ur"(?P<BF>\w)j",re.UNICODE)
     def __load_rules_from_file(self,path="models/data/inp/rules/hard_replaced_rules"):
         full_path = "%s/%s"%(CDIR,path)
         fin = open(full_path,"r")
@@ -27,11 +27,19 @@ class ForcingReplace():
             parts = line.split("\t")
             source = parts[0]
             repl = parts[1]
-            reg_source = re.compile(ur"\b%s\b"%source,re.UNICODE)
-            if source.__contains__("j"):
-                self.j_rules[reg_source] = repl
-            else:
+            if source.startswith("R"):
+                source = source[1:]
+                reg_source = re.compile(ur"%s"%source,re.UNICODE)
                 self.rules[reg_source] = repl
+
+            else:
+                reg_source = re.compile(ur"\b%s\b"%source,re.UNICODE)
+
+                if source.__contains__("j"):
+                    self.j_rules[reg_source] = repl
+                else:
+                    self.rules[reg_source] = repl
+
             print "\tLoaded a new rule: %s -> %s"%(source,repl)
         fin.close()
 
@@ -43,7 +51,7 @@ class ForcingReplace():
         return result
 
     def replace_j_regex(self,sen):
-        return self.j_regex.sub(ur"\g<BF>i\g<AT>", sen)
+        return self.j_regex.sub(ur"\g<BF>i", sen)
 
 
     def replace(self,sen):
@@ -55,6 +63,6 @@ class ForcingReplace():
         return result
 if __name__ == "__main__":
     replacer = ForcingReplace()
-    sen = "tuj khong bjt nua"
+    sen = "muon gjaj thjch di"
     qq = replacer.replace_j_regex(sen)
     print qq

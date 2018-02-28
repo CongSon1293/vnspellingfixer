@@ -99,39 +99,6 @@ def load_hard_fixing():
             fixing_map[parts[0]] = parts[1]
     f.close()
     return fixing_map
-def split_dot(token):
-    res = []
-    if DIGIT.search(token) == None:
-        parts = token.split(".")
-        for p in parts:
-            if len(p)> 0:
-                res.append(p)
-    else:
-        res.append(token)
-    return res
-
-def split_sentece(sen):
-    tokens = sen.split(" ")
-    res = []
-    for token in tokens:
-        ss = split_dot(token)
-        for s in ss:
-            res.append(s)
-    return res
-def is_skip_token(token):
-    if len(token)<2:
-        return True
-    for c in token:
-        if c.isdigit():
-            return True
-    if token.__contains__(",") or token.__contains__(".."):
-        return True
-    return False
-def norm_token(token):
-    token2 = unicodedata.normalize('NFC',token)
-    token2 = REMOVE_CHAR.sub("", token2)
-    token2 = MISS_SPACE.sub(ur"\g<BF>\g<GG> \g<AT>",token2)
-    return ENDING_MARKER.sub("",token2)
 
 def test():
     vn_vocab,vn_bare_vocab,vn_long_vocab,vn_long_bare_vocab \

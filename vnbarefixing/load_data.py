@@ -24,7 +24,7 @@ def split_news_sentence():
     sentences = []
     import sys
     sys.path.insert(0, '..')
-    from spelling_corrector import SentenceSpliter
+    from spelling_corrector.vnspliter.sentence_spliter import SentenceSpliter
     spliter = SentenceSpliter()
     cc = 0
     fout = open("%s/Sentences_Lines.dat"%DATA_DIR,"w",encoding="utf-8")
@@ -57,7 +57,7 @@ def load_news_data(is_reload=True):
     sentences = []
     import sys
     sys.path.insert(0, '..')
-    from spelling_corrector import SentenceSpliter
+    from spelling_corrector.vnspliter.sentence_spliter import SentenceSpliter
     spliter = SentenceSpliter()
     cc = 0
     while True:
@@ -84,6 +84,7 @@ def export_question_answer_sentences():
     re_dotspace = re.compile("\.")
 
     def norm_paragraph(para):
+        para = unicodedata.normalize("NFKC",para)
         para = para.replace("\r","")
         para = para.replace("\n",". ")
         para = re_ldots.sub(".",para)
@@ -96,7 +97,7 @@ def export_question_answer_sentences():
 
     def export():
         fin = open("%s/models/data/inp/fpt_mobiles_product_and_qa.dat" % cdir, "r")
-        fout = open("%s/fpt_shop_mobile.dat"%cdir,"w",encoding="utf-8")
+        fout = open("%s/fpt_shop_mobile.dat"%DATA_DIR,"w",encoding="utf-8")
 
         while True:
             line = fin.readline()
@@ -121,6 +122,7 @@ def export_question_answer_sentences():
                         pass
                     try:
                         answer = qa[1]
+
                         para = norm_paragraph(answer)
                         sentences = split_paragraph(para)
                         for sen in sentences:

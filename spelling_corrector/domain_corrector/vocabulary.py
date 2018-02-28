@@ -10,7 +10,7 @@ CDIR = os.path.abspath(os.path.dirname(__file__))
 
 class DomainVocaburaly():
     def __init__(self):
-        self.true_univocab = {}
+        self.true_univocab = set()
     def init(self,domain_dir=CDIR):
         self.__load_true_univocab(domain_dir)
     def __load_true_univocab(self,root="."):

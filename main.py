@@ -17,6 +17,7 @@ def old_fix():
     #bigram.save()
     bigram = BigramFixing.load()
     loop(bigram)
+
 def general_fix(pre_vocab = True,loop=True):
 
     if not pre_vocab:

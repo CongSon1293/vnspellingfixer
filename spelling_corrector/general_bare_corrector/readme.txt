@@ -11,3 +11,6 @@ Fixing:
 6. With step size: +-1
     Bigram context with a high priority on true-two-word-vocabulary, then bigram context
     Test for the context of +-2 if existing true-two-word
+
+Todo:
+Solve the confict of two possible replacements between backward and forward
