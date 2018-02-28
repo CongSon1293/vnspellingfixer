@@ -37,5 +37,5 @@ def general_fix(pre_vocab = True,loop=True):
 
 
 if __name__ == "__main__":
-    general_fix(pre_vocab=False)
+    general_fix(pre_vocab=True)
     #old_fix()
