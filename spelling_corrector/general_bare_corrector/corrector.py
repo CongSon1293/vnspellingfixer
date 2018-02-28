@@ -60,9 +60,10 @@ class GeneralBareCorrector():
         sorted_score = utils.sort_dict(d_candidates)
 
         print sorted_score
+        VALID_SIZE = min(len(sorted_score),N_TOP_CANDIDATES)
 
         if true_vocab_priority:
-            for i in xrange(N_TOP_CANDIDATES):
+            for i in xrange(VALID_SIZE):
                 candidate = sorted_score[i][0]
                 if self.vocab.check_true_bi_bare_vocab(candidate):
                     return candidate,sorted_score[i][1]
