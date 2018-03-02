@@ -1,14 +1,14 @@
 # Usage of spelling_corrector.general_bare_corrector
 
 ## Fixing
-###General corrector
+### General corrector
 ```
 from spelling_corrector.general_bare_corrector.corrector import GeneralBareCorrector
 general_corrector = GeneralBareCorrectord()
 inp = "Sentence tobe fixed"
 fix,back_ref = corrector.fix(inp)
 ```
-###Domain corrector
+### Domain corrector
 ```
 from spelling_corrector.domain_corrector.corrector import DomainBareCorrector
 domain_corrector = DomainBareCorrector()
@@ -18,7 +18,7 @@ domain_corrector.fix(inp)
 ```
 
 ## Data input
-###General corrector
+### General corrector
 
 Dir: spelling_corrector/general_bare_corrector/models/data/inp/
 
@@ -27,7 +27,7 @@ Dir: spelling_corrector/general_bare_corrector/models/data/inp/
  ```
   (wrong regex)\t(true replacement)
 ```
-###Domain corrector
+### Domain corrector
 Dir: spelling_corrector/domain_corrector/data/inp
  * special_tokens: Special tokens of the domain
  * special_words: Special words of the domain
