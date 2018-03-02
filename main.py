@@ -35,8 +35,16 @@ def general_fix(pre_vocab = True,loop=True):
                 print fix
 
 
+def domain_fix():
+    from spelling_corrector.domain_bare_corrector.corrector import DomainBareCorrector
+    domain_corrector = DomainBareCorrector()
+    while True:
+        inp = raw_input("Enter: ")
+        if len(inp) > 4:
+            fix, back_ref = domain_corrector.fix(inp)
+            print fix
 
 
 if __name__ == "__main__":
-    general_fix(pre_vocab=True)
-    #old_fix()
+    #general_fix(pre_vocab=True)
+    domain_fix()

@@ -215,8 +215,22 @@ class Vocaburaly():
 
         return utils.get_zero_dict(self.true_single_accent_vocab, word)
 
-    def check_true_single_bare_vocab(self,word):
-
+    def check_true_single_bare_vocab(self,word,skip_digit=True,new_true_vocab=""):
+        if skip_digit:
+            if DIGIT.search(word) != None:
+                return 1
+        if new_true_vocab != "":
+            if type(new_true_vocab) == set:
+                if word in new_true_vocab:
+                    return 1
+                else:
+                    return 0
+            else:
+                try:
+                    new_true_vocab[word]
+                    return 1
+                except:
+                    return 0
         return utils.get_zero_dict(self.true_single_bare_vocab, word)
 
     def check_true_bi_bare_vocab(self,word):

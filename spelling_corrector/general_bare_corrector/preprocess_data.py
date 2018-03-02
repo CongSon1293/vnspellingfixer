@@ -29,7 +29,7 @@ def split_news_sentence():
     sentences = []
     import sys
     sys.path.insert(0, '..')
-    from spelling_corrector import SentenceSpliter
+    from spelling_corrector.vnspliter.sentence_spliter import SentenceSpliter
     spliter = SentenceSpliter()
     cc = 0
     fout = open("%s/%s"%(DATA_DIR,NEWS_SENTENCES_DATA),"w",encoding="utf-8")

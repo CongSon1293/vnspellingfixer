@@ -2,7 +2,7 @@ import math
 import re
 
 import utils
-from replaced_rules import ForcingReplace
+from general_rules import GeneralRuleFixer
 from similarity_metrics import cal_sim_score
 from vocabulary import Vocaburaly
 
@@ -18,7 +18,7 @@ class GeneralBareCorrector():
         else:
             self.vocab = Vocaburaly.load()
             self.vocab.load_extended_true_bivocab()
-        self.rule_fix = ForcingReplace()
+        self.rule_fix = GeneralRuleFixer()
 
     def __is_suitable_length(self,word,candidate,size=SIZE_VARIANT):
         if math.fabs(len(word)-len(candidate)) <= SIZE_VARIANT:
@@ -79,7 +79,7 @@ class GeneralBareCorrector():
     def fix_rule(self,sen):
         return self.rule_fix.replace(sen)
 
-    def fix_general_bigram(self,sen):
+    def fix_general_bigram(self,sen,skip_digit=True,new_true_vocab=""):
 
 
         sen = self.fix_rule(sen)
@@ -96,8 +96,8 @@ class GeneralBareCorrector():
         #Fixing for wrong words
 
         for i in xrange(len(tokens)):
-            if not self.vocab.check_true_single_bare_vocab(tokens[i]):
-                print tokens[i]
+            if not self.vocab.check_true_single_bare_vocab(tokens[i],skip_digit,new_true_vocab):
+                print "Wrong token: ",tokens[i]
 
                 bigram_back = None
                 bigram_next = None
