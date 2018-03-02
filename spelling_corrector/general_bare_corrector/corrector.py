@@ -10,6 +10,7 @@ N_TOP_CANDIDATES = 4
 SIZE_VARIANT = 2
 class GeneralBareCorrector():
     def __init__(self,pre_vocab = True):
+        print "Initializing GeneralBareCorrector..."
         if not pre_vocab:
             self.vocab = Vocaburaly()
             self.vocab.__load_true_vocab()
@@ -79,7 +80,7 @@ class GeneralBareCorrector():
     def fix_rule(self,sen):
         return self.rule_fix.replace(sen)
 
-    def fix_general_bigram(self,sen,skip_digit=True,new_true_vocab=""):
+    def fix(self, sen, skip_digit=True, new_true_vocab=""):
 
 
         sen = self.fix_rule(sen)

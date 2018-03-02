@@ -31,7 +31,7 @@ def general_fix(pre_vocab = True,loop=True):
         while True:
             inp = raw_input("Enter: ")
             if len(inp) > 4:
-                fix,back_ref = corrector.fix_general_bigram(inp)
+                fix,back_ref = corrector.fix(inp)
                 print fix
 
 

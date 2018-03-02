@@ -5,6 +5,8 @@ from vocabulary import DomainVocaburaly
 
 class DomainBareCorrector():
     def __init__(self):
+        print "Initializing DomainBareCorrector..."
+
         self.domain_vocab = DomainVocaburaly()
         self.domain_vocab.init()
         self.domain_true_bare_vocab = self.domain_vocab.true_bare_univocab
@@ -14,5 +16,5 @@ class DomainBareCorrector():
 
     def fix(self,sen):
         sen = self.hard_one_rule_fixer.fix(sen)
-        sen = self.general_corrector.fix_general_bigram(sen,new_true_vocab=self.domain_true_bare_vocab)
+        sen = self.general_corrector.fix(sen, new_true_vocab=self.domain_true_bare_vocab)
         return sen

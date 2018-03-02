@@ -6,12 +6,12 @@
 from spelling_corrector.general_bare_corrector.corrector import GeneralBareCorrector
 general_corrector = GeneralBareCorrectord()
 inp = "Sentence tobe fixed"
-fix,back_ref = corrector.fix_general_bigram(inp)
+fix,back_ref = corrector.fix(inp)
 ```
 ###Domain corrector
 ```
-from spelling_corrector.domain_corrector.corrector import DomainCorrector
-domain_corrector = DomainCorrector()
+from spelling_corrector.domain_corrector.corrector import DomainBareCorrector
+domain_corrector = DomainBareCorrector()
 inp = "Sentence tobe fixed"
 domain_corrector.fix(inp)
 
