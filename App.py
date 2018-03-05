@@ -41,7 +41,7 @@ if __name__ == '__main__':
    opts = optparser.parse_args()[0]
    port = opts.port
 
-   init_model(is_general=True)
+   init_model(is_general=False)
 
 
    app.run(debug = False,host='0.0.0.0', port=port)
