@@ -115,7 +115,12 @@ def get_dict_element(d,k):
     except:
         v = k
     return v
-
+def get_update_dict(d,k,v=0):
+    try:
+        v = d[k]
+    except:
+        d[k] = v
+    return v
 def generate_hierachical_first_alphabet_dict(ddict):
     hierachical_f_dict = {}
     for k, v in ddict.iteritems():

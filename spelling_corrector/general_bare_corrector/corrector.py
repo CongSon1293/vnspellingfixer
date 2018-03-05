@@ -4,22 +4,28 @@ import re
 import utils
 from general_rules import GeneralRuleFixer
 from similarity_metrics import cal_sim_score
-from vocabulary import Vocaburaly
+from language_model import LanguageModel
+import config
 
 N_TOP_CANDIDATES = 4
 SIZE_VARIANT = 2
 class GeneralBareCorrector():
     def __init__(self,pre_vocab = True):
         print "Initializing GeneralBareCorrector..."
+        if not LanguageModel.is_model_existed():
+            pre_vocab = False
         if not pre_vocab:
-            self.vocab = Vocaburaly()
-            self.vocab.__load_true_vocab()
-            self.vocab.__load_all_news_bi_words()
-            self.vocab.save()
+            self.language_model = LanguageModel()
+            self.language_model.init()
+            #self.vocab.__load_true_vocab()
+            #self.vocab.__load_all_news_bi_words()
+            self.language_model.save()
         else:
-            self.vocab = Vocaburaly.load()
-            self.vocab.load_extended_true_bivocab()
+            self.language_model = LanguageModel.load()
+            self.language_model.load_extended_true_bivocab()
         self.rule_fix = GeneralRuleFixer()
+
+
 
     def __is_suitable_length(self,word,candidate,size=SIZE_VARIANT):
         if math.fabs(len(word)-len(candidate)) <= SIZE_VARIANT:
@@ -29,7 +35,7 @@ class GeneralBareCorrector():
         start_index = current_index + offset
         if start_index >= 0 and start_index < len(tokens) - 1:
             biword = "%s %s"%(tokens[start_index],tokens[start_index+1])
-            return self.vocab.check_true_bi_bare_vocab(biword)
+            return self.language_model.check_true_bi_bare_vocab(biword)
         return False
 
 
@@ -41,7 +47,7 @@ class GeneralBareCorrector():
         if c == " ":
             return wrong_bigram,0
         try:
-            sub_dict = self.vocab.hierachical_first_char_dict[c]
+            sub_dict = self.language_model.hierachical_first_char_dict[c]
         except:
             return wrong_bigram,0
 
@@ -66,7 +72,7 @@ class GeneralBareCorrector():
         if true_vocab_priority:
             for i in xrange(VALID_SIZE):
                 candidate = sorted_score[i][0]
-                if self.vocab.check_true_bi_bare_vocab(candidate):
+                if self.language_model.check_true_bi_bare_vocab(candidate):
                     return candidate,sorted_score[i][1]
 
 
@@ -79,12 +85,17 @@ class GeneralBareCorrector():
 
     def fix_rule(self,sen):
         return self.rule_fix.replace(sen)
+    def fix(self,sen, skip_digit=True, new_true_vocab=""):
+        if config.USING_MARKOV:
+            return self.fix_markov(sen, skip_digit=True, new_true_vocab="")
+        else:
+            return self.fix_bigram(sen, skip_digit=True, new_true_vocab="")
 
-    def fix(self, sen, skip_digit=True, new_true_vocab=""):
 
+    def fix_markov(self, sen, skip_digit=True, new_true_vocab=""):
 
         sen = self.fix_rule(sen)
-        _tokens = self.vocab.split_sentece(sen)
+        _tokens = self.language_model.split_sentece(sen)
         back_ref = " ".join(_tokens)
 
         tokens = []
@@ -97,7 +108,81 @@ class GeneralBareCorrector():
         #Fixing for wrong words
 
         for i in xrange(len(tokens)):
-            if not self.vocab.check_true_single_bare_vocab(tokens[i],skip_digit,new_true_vocab):
+            if not self.language_model.check_true_single_bare_vocab(tokens[i], skip_digit, new_true_vocab):
+                print "Wrong token: ",tokens[i]
+
+                bigram_back = None
+                bigram_next = None
+                fix_bigram_back = None
+                fix_bigram_next = None
+                fix_code_back = 0
+                fix_code_next = 0
+                if i > 0:
+                    bigram_back = "%s %s"%(tokens[i-1],tokens[i])
+                if i < len(tokens) -1 :
+                    bigram_next = "%s %s"%(tokens[i],tokens[i+1])
+
+                if bigram_back != None:
+                    fix_bigram_back,fix_code_back  = self.__fix_wrong_candidate(bigram_back)
+                if bigram_next != None:
+                    fix_bigram_next,fix_code_next = self.__fix_wrong_candidate(bigram_next)
+                print fix_bigram_back,fix_code_back
+                print fix_bigram_next,fix_code_next
+
+
+                if fix_code_back > 0:
+                    print "Back with next",fix_code_next!=0
+                    if fix_code_next == 0:
+                        reg = re.compile(ur'\b%s\b' % bigram_back, re.UNICODE)
+                        bare_raw_sen = reg.sub(fix_bigram_back, bare_raw_sen)
+                        print "Replacing back only...",bigram_back,":",fix_bigram_back,":",bare_raw_sen
+                        continue
+
+                if fix_code_next != 0:
+                    if fix_code_back == 0:
+                        reg = re.compile(r"\b%s\b"%bigram_next,re.UNICODE)
+                        bare_raw_sen = reg.sub(fix_bigram_next,bare_raw_sen)
+                        print "Replacing next only...",bigram_next,":",fix_bigram_next
+                        continue
+
+                #Stats multi cases:
+                if fix_code_back >0 and fix_code_next>0:
+                    sub_sen = " ".join(tokens[i-1:i+2])
+                    reg_back = re.compile(ur'\b%s\b' % bigram_back, re.UNICODE)
+                    bare_sub_sen_back = reg_back.sub(fix_bigram_back, sub_sen)
+
+                    reg_next = re.compile(r"\b%s\b" % bigram_next, re.UNICODE)
+                    bare_sub_sen_next = reg_next.sub(fix_bigram_next, sub_sen)
+
+                    score_back = self.language_model.get_prob_sentence(bare_sub_sen_back)
+                    score_next = self.language_model.get_prob_sentence(bare_sub_sen_next)
+                    print score_back,score_next
+                    if score_back > score_next:
+                        bare_raw_sen = reg_back.sub(fix_bigram_back,bare_raw_sen)
+                        continue
+                    else:
+                        bare_raw_sen = reg_next.sub(fix_bigram_next,bare_raw_sen)
+                        continue
+        return bare_raw_sen,back_ref
+
+    def fix_bigram(self, sen, skip_digit=True, new_true_vocab=""):
+
+
+        sen = self.fix_rule(sen)
+        _tokens = self.language_model.split_sentece(sen)
+        back_ref = " ".join(_tokens)
+
+        tokens = []
+        for token in _tokens:
+            token = utils.accent2bare(token)
+            tokens.append(token)
+
+        bare_raw_sen = " ".join(tokens)
+
+        #Fixing for wrong words
+
+        for i in xrange(len(tokens)):
+            if not self.language_model.check_true_single_bare_vocab(tokens[i], skip_digit, new_true_vocab):
                 print "Wrong token: ",tokens[i]
 
                 bigram_back = None
@@ -120,14 +205,14 @@ class GeneralBareCorrector():
 
                 if fix_code_back > 0:
                     print "Back",fix_code_next==0
-                    if fix_code_next == 0 or self.vocab.check_true_bi_bare_vocab(fix_bigram_back):
+                    if fix_code_next == 0 or self.language_model.check_true_bi_bare_vocab(fix_bigram_back):
                         reg = re.compile(ur'\b%s\b' % bigram_back, re.UNICODE)
                         bare_raw_sen = reg.sub(fix_bigram_back, bare_raw_sen)
                         print "Replacing...",bigram_back,":",fix_bigram_back,":",bare_raw_sen
                         continue
 
                 if fix_code_next != 0:
-                    if fix_code_back < fix_code_next or self.vocab.check_true_bi_bare_vocab(fix_code_next):
+                    if fix_code_back < fix_code_next or self.language_model.check_true_bi_bare_vocab(fix_code_next):
                         reg = re.compile(r"\b%s\b"%bigram_next,re.UNICODE)
                         bare_raw_sen = reg.sub(fix_bigram_next,bare_raw_sen)
                     elif fix_code_back > fix_code_next:
