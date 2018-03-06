@@ -9,6 +9,7 @@ import config
 
 N_TOP_CANDIDATES = 4
 SIZE_VARIANT = 2
+G_N_TOP_RETURN = 2
 class GeneralBareCorrector():
     def __init__(self,pre_vocab = True):
         print "Initializing GeneralBareCorrector..."
@@ -82,14 +83,68 @@ class GeneralBareCorrector():
 
         return wrong_bigram,0
 
+    def __fix_wrong_multi_candidates(self, wrong_bigram,true_vocab_priority=True):
+        d_candidates = {}
+        c = wrong_bigram[0]
+
+        if c == " ":
+            return [wrong_bigram],[0]
+        try:
+            sub_dict = self.language_model.hierachical_first_char_dict[c]
+        except:
+            return [wrong_bigram],[0]
+
+        for candidate, counter in sub_dict.iteritems():
+            if not self.__is_suitable_length(wrong_bigram,candidate):
+                continue
+            try:
+                d_candidates[candidate]
+            except:
+                sim_score = cal_sim_score(wrong_bigram, candidate, counter)
+                if sim_score < 0.7:
+                    continue
+                d_candidates[candidate] = cal_sim_score(wrong_bigram, candidate, counter)
+
+        if len(d_candidates) == 0:
+            return wrong_bigram,0
+        sorted_score = utils.sort_dict(d_candidates)
+
+        print sorted_score[:3],len(sorted_score)
+        VALID_SIZE = min(len(sorted_score),N_TOP_CANDIDATES)
+        N_TOP_RETURN = G_N_TOP_RETURN
+        candidates = []
+        scores = []
+        if true_vocab_priority:
+            for i in xrange(VALID_SIZE):
+                candidate = sorted_score[i][0]
+                if self.language_model.check_true_bi_bare_vocab(candidate):
+                    candidates.append(candidate)
+                    scores.append(sorted_score[i][1])
+                    #return candidate,sorted_score[i][1]
+        if len(candidates) >= 1:
+            N_TOP_RETURN = min(len(candidates),N_TOP_RETURN)
+            return candidates[:N_TOP_RETURN],scores[:N_TOP_RETURN]
+        for i in xrange(VALID_SIZE):
+            if sorted_score[i][1] > .99:
+                candidate = sorted_score[i][0]
+                candidates.append(candidate)
+                scores.append(sorted_score[i][1])
+        N_TOP_RETURN = min(len(candidates),N_TOP_RETURN)
+
+        if N_TOP_RETURN > 0:
+            return candidates[:N_TOP_RETURN], scores[:N_TOP_RETURN]
+
+        return [wrong_bigram],[0]
 
     def fix_rule(self,sen):
         return self.rule_fix.replace(sen)
     def fix(self,sen, skip_digit=True, new_true_vocab=""):
-        if config.USING_MARKOV:
-            return self.fix_markov(sen, skip_digit=True, new_true_vocab="")
+        if config.USING_MARKOV == 1:
+            return self.fix_markov(sen, skip_digit=skip_digit, new_true_vocab=new_true_vocab)
+        if config.USING_MARKOV == 2:
+            return self.fix_multi_markov(sen, skip_digit=skip_digit, new_true_vocab=new_true_vocab)
         else:
-            return self.fix_bigram(sen, skip_digit=True, new_true_vocab="")
+            return self.fix_bigram(sen, skip_digit=skip_digit, new_true_vocab=new_true_vocab)
 
 
     def fix_markov(self, sen, skip_digit=True, new_true_vocab=""):
@@ -163,6 +218,90 @@ class GeneralBareCorrector():
                     else:
                         bare_raw_sen = reg_next.sub(fix_bigram_next,bare_raw_sen)
                         continue
+        return bare_raw_sen,back_ref
+    def fix_multi_markov(self, sen, skip_digit=True, new_true_vocab=""):
+
+        sen = self.fix_rule(sen)
+        _tokens = self.language_model.split_sentece(sen)
+        back_ref = " ".join(_tokens)
+
+        tokens = []
+        for token in _tokens:
+            token = utils.accent2bare(token)
+            tokens.append(token)
+
+        bare_raw_sen = " ".join(tokens)
+
+        #Fixing for wrong words
+
+        for i in xrange(len(tokens)):
+            if not self.language_model.check_true_single_bare_vocab(tokens[i], skip_digit, new_true_vocab):
+                print "Wrong token: ",tokens[i]
+
+                bigram_back = None
+                bigram_next = None
+                fix_bigram_backs = []
+                fix_bigram_nexts = []
+                fix_code_backs = []
+                fix_code_nexts = []
+                if i > 0:
+                    bigram_back = "%s %s"%(tokens[i-1],tokens[i])
+                if i < len(tokens) -1 :
+                    bigram_next = "%s %s"%(tokens[i],tokens[i+1])
+
+                if bigram_back != None:
+                    fix_bigram_backs,fix_code_backs  = self.__fix_wrong_multi_candidates(bigram_back,true_vocab_priority=False)
+                if bigram_next != None:
+                    fix_bigram_nexts,fix_code_nexts = self.__fix_wrong_multi_candidates(bigram_next,true_vocab_priority=False)
+                print fix_bigram_backs,fix_code_backs
+                print fix_bigram_nexts,fix_code_nexts
+
+
+                reg_list = []
+                repl_list = []
+                can_list = []
+
+                sub_first_ind = i-1
+                if sub_first_ind < 0:
+                    sub_first_ind = 0
+                sub_last_ind = i + 3
+                if sub_last_ind > len(tokens):
+                    sub_last_ind = len(tokens)
+                sub_sen = " ".join(tokens[sub_first_ind:sub_last_ind])
+                #Back replacing
+                if len(fix_code_backs) > 0 and fix_code_backs[0] > 0:
+                    for fix_bigram_back in fix_bigram_backs:
+                        reg_back = re.compile(ur'\b%s\b' % bigram_back, re.UNICODE)
+                        bare_back_rep = reg_back.sub(fix_bigram_back, sub_sen)
+
+                        reg_list.append(reg_back)
+                        repl_list.append(fix_bigram_back)
+                        can_list.append(bare_back_rep)
+                        print fix_bigram_back,":->",bare_back_rep
+
+                if len(fix_code_nexts) > 0 and fix_code_nexts[0] > 0:
+                    for fix_bigram_next in fix_bigram_nexts:
+                        reg_next = re.compile(r"\b%s\b" % bigram_next, re.UNICODE)
+                        bare_sub_sen_next = reg_next.sub(fix_bigram_next, sub_sen)
+                        reg_list.append(reg_next)
+                        repl_list.append(fix_bigram_next)
+                        can_list.append(bare_sub_sen_next)
+
+                        print fix_bigram_next,":->",bare_sub_sen_next
+
+
+                max_idx = -1
+                max_markov_score = -100000
+                for i in xrange(len(can_list)):
+                    markov_score = self.language_model.get_prob_sentence(can_list[i])
+                    print can_list[i],markov_score
+                    if markov_score > max_markov_score:
+                        max_markov_score = markov_score
+                        max_idx = i
+
+                if max_idx >=0:
+                    bare_raw_sen = reg_list[max_idx].sub(repl_list[max_idx],bare_raw_sen)
+
         return bare_raw_sen,back_ref
 
     def fix_bigram(self, sen, skip_digit=True, new_true_vocab=""):
