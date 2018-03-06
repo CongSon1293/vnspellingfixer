@@ -38,10 +38,18 @@ if __name__ == '__main__':
    optparser.add_option(
       "-R", "--port", default="9199",type="int"
    )
+   optparser.add_option(
+      "-M","--mode", default="general"
+   )
    opts = optparser.parse_args()[0]
    port = opts.port
 
-   init_model(is_general=True)
+   mode = opts.mode
+   is_domain = True
+   if mode == "general":
+      is_domain = False
+
+   init_model(is_general=is_domain)
 
 
    app.run(debug = False,host='0.0.0.0', port=port)
