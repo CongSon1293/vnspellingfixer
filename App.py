@@ -45,11 +45,11 @@ if __name__ == '__main__':
    port = opts.port
 
    mode = opts.mode
-   is_domain = True
+   is_genaral = False
    if mode == "general":
-      is_domain = False
+      is_genaral = True
 
-   init_model(is_general=is_domain)
+   init_model(is_general=is_genaral)
 
 
    app.run(debug = False,host='0.0.0.0', port=port)
