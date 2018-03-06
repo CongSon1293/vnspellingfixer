@@ -226,7 +226,7 @@ class LanguageModel():
             cc += 1
             if cc % 100 == 0:
                 print "\r\t\t\t%s" % cc,
-            if cc >= 600000:
+            if cc >= 900000:
                 break
             line = line.strip()
             qs = line.lower()

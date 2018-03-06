@@ -66,7 +66,7 @@ class GeneralBareCorrector():
             return wrong_bigram,0
         sorted_score = utils.sort_dict(d_candidates)
 
-        print sorted_score
+        print sorted_score[:3],len(sorted_score)
         VALID_SIZE = min(len(sorted_score),N_TOP_CANDIDATES)
 
         if true_vocab_priority:
