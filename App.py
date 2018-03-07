@@ -1,6 +1,6 @@
 import HTMLParser
 import optparse
-
+import requests
 from flask import Flask
 from flask import request
 
@@ -19,10 +19,18 @@ def init_model(is_general=False):
       spelling_corrector = GeneralBareCorrector()
    else:
       spelling_corrector = DomainBareCorrector()
+@app.after_request
+def after_request(response):
+  response.headers.add('Access-Control-Allow-Origin', '*')
+  response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+  response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+  return response
+
+
 @app.route('/')
 def start():
    #return render_template('index.html')
-   return app.send_static_file('index.html')
+   return app.send_static_file('home.html')
 @app.route('/fix',methods=['GET', 'POST'])
 def fix():
    #data = request.data
@@ -32,6 +40,15 @@ def fix():
    #sen = sen.decode("utf-8")
    fixed_res,_ = spelling_corrector.fix(sen)
    return fixed_res
+
+@app.route('/accent',methods=['GET','POST'])
+def accent():
+   sen = request.form['data']
+   try:
+       accent_request = requests.post("http://topica.ai:9339/accent",data={"data":sen}, timeout=30)
+       return accent_request.content
+   except:
+        return "Unable to get accent result"
 
 if __name__ == '__main__':
    optparser = optparse.OptionParser()
