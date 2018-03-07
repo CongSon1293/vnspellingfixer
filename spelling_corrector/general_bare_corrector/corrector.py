@@ -10,6 +10,8 @@ import config
 N_TOP_CANDIDATES = 4
 SIZE_VARIANT = 2
 G_N_TOP_RETURN = 2
+R_MARKER_REF = re.compile(ur"(?P<MARKER>[\`\'\^\?\~\*])")
+ACCENT_TEENCODE_REG = re.compile(ur"(?<=\S)[\`\'\^\?\~\*]")
 class GeneralBareCorrector():
     def __init__(self,pre_vocab = True):
         print "Initializing GeneralBareCorrector..."
@@ -106,7 +108,7 @@ class GeneralBareCorrector():
                 d_candidates[candidate] = cal_sim_score(wrong_bigram, candidate, counter)
 
         if len(d_candidates) == 0:
-            return wrong_bigram,0
+            return [wrong_bigram],[0]
         sorted_score = utils.sort_dict(d_candidates)
 
         print sorted_score[:3],len(sorted_score)
@@ -136,20 +138,80 @@ class GeneralBareCorrector():
 
         return [wrong_bigram],[0]
 
-    def fix_rule(self,sen):
+    def __fix_rule(self, sen):
         return self.rule_fix.replace(sen)
     def fix(self,sen, skip_digit=True, new_true_vocab=""):
         if config.USING_MARKOV == 1:
-            return self.fix_markov(sen, skip_digit=skip_digit, new_true_vocab=new_true_vocab)
+            return self.__fix_markov(sen, skip_digit=skip_digit, new_true_vocab=new_true_vocab)
         if config.USING_MARKOV == 2:
-            return self.fix_multi_markov(sen, skip_digit=skip_digit, new_true_vocab=new_true_vocab)
+            return self.__fix_multi_markov(sen, skip_digit=skip_digit, new_true_vocab=new_true_vocab)
         else:
-            return self.fix_bigram(sen, skip_digit=skip_digit, new_true_vocab=new_true_vocab)
+            return self.__fix_bigram(sen, skip_digit=skip_digit, new_true_vocab=new_true_vocab)
+    def __fix_bigram(self, sen, skip_digit=True, new_true_vocab=""):
 
 
-    def fix_markov(self, sen, skip_digit=True, new_true_vocab=""):
+        sen = self.__fix_rule(sen)
+        _tokens = self.language_model.split_sentece(sen)
+        back_ref = " ".join(_tokens)
 
-        sen = self.fix_rule(sen)
+        tokens = []
+        for token in _tokens:
+            token = utils.accent2bare(token)
+            tokens.append(token)
+
+        bare_raw_sen = " ".join(tokens)
+
+        #Fixing for wrong words
+
+        for i in xrange(len(tokens)):
+            if not self.language_model.check_true_single_bare_vocab(tokens[i], skip_digit, new_true_vocab):
+                print "Wrong token: ",tokens[i]
+
+                bigram_back = None
+                bigram_next = None
+                fix_bigram_back = None
+                fix_bigram_next = None
+                fix_code_back = 0
+                fix_code_next = 0
+                if i > 0:
+                    bigram_back = "%s %s"%(tokens[i-1],tokens[i])
+                if i < len(tokens) -1 :
+                    bigram_next = "%s %s"%(tokens[i],tokens[i+1])
+
+                if bigram_back != None:
+                    fix_bigram_back,fix_code_back  = self.__fix_wrong_candidate(bigram_back)
+                if bigram_next != None:
+                    fix_bigram_next,fix_code_next = self.__fix_wrong_candidate(bigram_next)
+                print fix_bigram_back,fix_code_back
+                print fix_bigram_next,fix_code_next
+
+                if fix_code_back > 0:
+                    print "Back",fix_code_next==0
+                    if fix_code_next == 0 or self.language_model.check_true_bi_bare_vocab(fix_bigram_back):
+                        back_pattern = self.__fix_regex_marker_pattern(bigram_back)
+                        reg = self.__create_bound_pattern(back_pattern)
+                        bare_raw_sen = reg.sub(fix_bigram_back, bare_raw_sen)
+                        print "Replacing...",bigram_back,":",fix_bigram_back,":",bare_raw_sen
+                        continue
+
+                if fix_code_next != 0:
+                    if fix_code_back < fix_code_next or self.language_model.check_true_bi_bare_vocab(fix_code_next):
+
+                        next_pattern = self.__fix_regex_marker_pattern(bigram_next)
+                        reg_next = self.__create_bound_pattern(next_pattern)
+                        bare_raw_sen = reg_next.sub(fix_bigram_next, bare_raw_sen)
+                    elif fix_code_back > fix_code_next:
+                        back_pattern = self.__fix_regex_marker_pattern(bigram_back)
+                        reg = self.__create_bound_pattern(back_pattern)
+                        bare_raw_sen = reg.sub(fix_bigram_back, bare_raw_sen)
+                        continue
+
+        return bare_raw_sen,back_ref
+
+
+    def __fix_markov(self, sen, skip_digit=True, new_true_vocab=""):
+
+        sen = self.__fix_rule(sen)
         _tokens = self.language_model.split_sentece(sen)
         back_ref = " ".join(_tokens)
 
@@ -188,14 +250,20 @@ class GeneralBareCorrector():
                 if fix_code_back > 0:
                     print "Back with next",fix_code_next!=0
                     if fix_code_next == 0:
-                        reg = re.compile(ur'\b%s\b' % bigram_back, re.UNICODE)
-                        bare_raw_sen = reg.sub(fix_bigram_back, bare_raw_sen)
+                        back_pattern = self.__fix_regex_marker_pattern(bigram_back)
+                        #reg = re.compile(ur'\b%s\b' % bigram_back, re.UNICODE)
+                        #bare_raw_sen = reg.sub(fix_bigram_back, bare_raw_sen)
+                        reg = self.__create_bound_pattern(back_pattern)
+                        bare_raw_sen = reg.sub(fix_bigram_back,bare_raw_sen)
                         print "Replacing back only...",bigram_back,":",fix_bigram_back,":",bare_raw_sen
                         continue
 
                 if fix_code_next != 0:
                     if fix_code_back == 0:
-                        reg = re.compile(r"\b%s\b"%bigram_next,re.UNICODE)
+                        next_pattern = self.__fix_regex_marker_pattern(bigram_next)
+                        #reg = re.compile(r"\b%s\b"%bigram_next,re.UNICODE)
+                        #bare_raw_sen = reg.sub(fix_bigram_next,bare_raw_sen)
+                        reg = self.__create_bound_pattern(next_pattern)
                         bare_raw_sen = reg.sub(fix_bigram_next,bare_raw_sen)
                         print "Replacing next only...",bigram_next,":",fix_bigram_next
                         continue
@@ -203,10 +271,16 @@ class GeneralBareCorrector():
                 #Stats multi cases:
                 if fix_code_back >0 and fix_code_next>0:
                     sub_sen = " ".join(tokens[i-1:i+2])
-                    reg_back = re.compile(ur'\b%s\b' % bigram_back, re.UNICODE)
+
+                    back_pattern = self.__fix_regex_marker_pattern(bigram_back)
+                    reg_back = self.__create_bound_pattern(back_pattern)
+
+                    #reg_back = re.compile(ur'\b%s\b' % bigram_back, re.UNICODE)
                     bare_sub_sen_back = reg_back.sub(fix_bigram_back, sub_sen)
 
-                    reg_next = re.compile(r"\b%s\b" % bigram_next, re.UNICODE)
+                    next_pattern = self.__fix_regex_marker_pattern(bigram_next)
+                    reg_next = self.__create_bound_pattern(next_pattern)
+                    #reg_next = re.compile(r"\b%s\b" % bigram_next, re.UNICODE)
                     bare_sub_sen_next = reg_next.sub(fix_bigram_next, sub_sen)
 
                     score_back = self.language_model.get_prob_sentence(bare_sub_sen_back)
@@ -219,9 +293,12 @@ class GeneralBareCorrector():
                         bare_raw_sen = reg_next.sub(fix_bigram_next,bare_raw_sen)
                         continue
         return bare_raw_sen,back_ref
-    def fix_multi_markov(self, sen, skip_digit=True, new_true_vocab=""):
 
-        sen = self.fix_rule(sen)
+
+    def __fix_multi_markov(self, sen, skip_digit=True, new_true_vocab=""):
+
+        sen = self.__fix_rule(sen)
+        sen = self.__remove_accent_teencode(sen)
         _tokens = self.language_model.split_sentece(sen)
         back_ref = " ".join(_tokens)
 
@@ -270,19 +347,25 @@ class GeneralBareCorrector():
                 sub_sen = " ".join(tokens[sub_first_ind:sub_last_ind])
                 #Back replacing
                 if len(fix_code_backs) > 0 and fix_code_backs[0] > 0:
+                    back_pattern = self.__fix_regex_marker_pattern(bigram_back)
                     for fix_bigram_back in fix_bigram_backs:
-                        reg_back = re.compile(ur'\b%s\b' % bigram_back, re.UNICODE)
-                        bare_back_rep = reg_back.sub(fix_bigram_back, sub_sen)
+                        reg_back = self.__create_bound_pattern(back_pattern)
+                        bare_back_rep = reg_back.sub(fix_bigram_back,sub_sen)
+                        #reg_back = re.compile(ur'\b%s\b' % bigram_back, re.UNICODE)
+                        #bare_back_rep = reg_back.sub(fix_bigram_back, sub_sen)
 
                         reg_list.append(reg_back)
                         repl_list.append(fix_bigram_back)
                         can_list.append(bare_back_rep)
                         print fix_bigram_back,":->",bare_back_rep
-
+                #print "Fix code nexts",fix_code_nexts
                 if len(fix_code_nexts) > 0 and fix_code_nexts[0] > 0:
+                    next_pattern = self.__fix_regex_marker_pattern(bigram_next)
                     for fix_bigram_next in fix_bigram_nexts:
-                        reg_next = re.compile(r"\b%s\b" % bigram_next, re.UNICODE)
-                        bare_sub_sen_next = reg_next.sub(fix_bigram_next, sub_sen)
+                        reg_next = self.__create_bound_pattern(next_pattern)
+                        bare_sub_sen_next = reg_next.sub(fix_bigram_next,sub_sen)
+                        #reg_next = re.compile(r"\b%s\b" % bigram_next, re.UNICODE)
+                        #bare_sub_sen_next = reg_next.sub(fix_bigram_next, sub_sen)
                         reg_list.append(reg_next)
                         repl_list.append(fix_bigram_next)
                         can_list.append(bare_sub_sen_next)
@@ -304,62 +387,14 @@ class GeneralBareCorrector():
 
         return bare_raw_sen,back_ref
 
-    def fix_bigram(self, sen, skip_digit=True, new_true_vocab=""):
+
+    def __remove_accent_teencode(self,sen):
+        return ACCENT_TEENCODE_REG.sub("",sen)
 
 
-        sen = self.fix_rule(sen)
-        _tokens = self.language_model.split_sentece(sen)
-        back_ref = " ".join(_tokens)
-
-        tokens = []
-        for token in _tokens:
-            token = utils.accent2bare(token)
-            tokens.append(token)
-
-        bare_raw_sen = " ".join(tokens)
-
-        #Fixing for wrong words
-
-        for i in xrange(len(tokens)):
-            if not self.language_model.check_true_single_bare_vocab(tokens[i], skip_digit, new_true_vocab):
-                print "Wrong token: ",tokens[i]
-
-                bigram_back = None
-                bigram_next = None
-                fix_bigram_back = None
-                fix_bigram_next = None
-                fix_code_back = 0
-                fix_code_next = 0
-                if i > 0:
-                    bigram_back = "%s %s"%(tokens[i-1],tokens[i])
-                if i < len(tokens) -1 :
-                    bigram_next = "%s %s"%(tokens[i],tokens[i+1])
-
-                if bigram_back != None:
-                    fix_bigram_back,fix_code_back  = self.__fix_wrong_candidate(bigram_back)
-                if bigram_next != None:
-                    fix_bigram_next,fix_code_next = self.__fix_wrong_candidate(bigram_next)
-                print fix_bigram_back,fix_code_back
-                print fix_bigram_next,fix_code_next
-
-                if fix_code_back > 0:
-                    print "Back",fix_code_next==0
-                    if fix_code_next == 0 or self.language_model.check_true_bi_bare_vocab(fix_bigram_back):
-                        reg = re.compile(ur'\b%s\b' % bigram_back, re.UNICODE)
-                        bare_raw_sen = reg.sub(fix_bigram_back, bare_raw_sen)
-                        print "Replacing...",bigram_back,":",fix_bigram_back,":",bare_raw_sen
-                        continue
-
-                if fix_code_next != 0:
-                    if fix_code_back < fix_code_next or self.language_model.check_true_bi_bare_vocab(fix_code_next):
-                        reg = re.compile(r"\b%s\b"%bigram_next,re.UNICODE)
-                        bare_raw_sen = reg.sub(fix_bigram_next,bare_raw_sen)
-                    elif fix_code_back > fix_code_next:
-                        reg = re.compile(r"\b%s\b" % bigram_back, re.UNICODE)
-                        bare_raw_sen = reg.sub(fix_bigram_back, bare_raw_sen)
-                        continue
+    def __create_bound_pattern(self,pattern):
+        return re.compile(ur"(?<!\S)%s(?=\s|$)" % pattern)
 
 
-
-        return bare_raw_sen,back_ref
-
+    def __fix_regex_marker_pattern(self,src):
+        return R_MARKER_REF.sub(ur"\\\g<MARKER>",src)
