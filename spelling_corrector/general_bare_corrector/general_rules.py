@@ -41,7 +41,7 @@ class GeneralRuleFixer():
                 else:
                     self.rules[reg_source] = repl
 
-            print "\tLoaded a new rule: %s -> %s"%(source,repl)
+            #print "\tLoaded a new rule: %s -> %s"%(source,repl)
         fin.close()
 
     def replace_j_rule(self,sen):

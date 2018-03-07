@@ -51,7 +51,7 @@ class RulesFixing():
                 reg_source = self.__create_bound_pattern(source_pattern)
                 self.__domain_rules[reg_source] = repl
 
-            print "\tLoaded a domain rule: %s -> %s" % (source, repl)
+            #print "\tLoaded a domain rule: %s -> %s" % (source, repl)
         fin.close()
 
     def init(self,level=0):
