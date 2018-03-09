@@ -4,8 +4,9 @@ import os
 import re
 import unicodedata
 from io import open
-
+import config
 import utils
+
 
 cdir = os.path.abspath(os.path.dirname(__file__))
 
@@ -28,6 +29,8 @@ class MarkovStats():
         self.__bigram_sum = {}
 
         self.__MIN_PROB = 1e-5
+        self.__MIN_UNIGRAM_COUNTER = 2
+        self.__MIN_BIGRAM_COUNTER = 5
 
 
     def add_bigram(self,w1,w2):
@@ -39,11 +42,50 @@ class MarkovStats():
         utils.add_dict_counter(sub_next_unigrams,w2)
         utils.add_dict_counter(self.__bigram_sum,w1)
 
+    def filter(self):
+        print "\t\tFitltering n-gram for markov stats..."
+        filtered_unigram = {}
+        c_subtract_unigram = 0
+        for w,c in self.__unigram_counter.iteritems():
+            if c < self.__MIN_UNIGRAM_COUNTER:
+                c_subtract_unigram += c
+            else:
+                filtered_unigram[w] = c
+        del self.__unigram_counter
+        self.__unigram_counter = filtered_unigram
+        self.__unigram_sum -= c_subtract_unigram
+        #print "\t\tRemove %s rare unigram"%c_subtract_unigram
+
+        filtered_bigram_sum = {}
+        filtered_bigram_hiecounter = {}
+        for w,c in self.__bigram_sum.iteritems():
+            if c < self.__MIN_BIGRAM_COUNTER:
+                continue
+            sub_dict = utils.get_zero_dict(self.__bigram_hierachical_counter,w)
+            if sub_dict == 0:
+                continue
+            sum = 0
+            filtered_sub_dict = {}
+            for wn,cc in sub_dict.iteritems():
+                if cc < self.__MIN_BIGRAM_COUNTER:
+                    continue
+                filtered_sub_dict[wn] = cc
+                sum += cc
+            filtered_bigram_sum[w] = sum
+            filtered_bigram_hiecounter[w] = filtered_sub_dict
+
+        del self.__bigram_sum
+        del self.__bigram_hierachical_counter
+        self.__bigram_sum = filtered_bigram_sum
+        self.__bigram_hierachical_counter = filtered_bigram_hiecounter
 
     def update_prob(self):
+        self.filter()
 
         for k,v in self.__unigram_counter.iteritems():
             self.__unigram_prob[k] = v * 1.0 / self.__unigram_sum
+
+
         for k,dv in self.__bigram_hierachical_counter.iteritems():
             d_prob = {}
             self.__bigram_hierachical_prob[k] = d_prob
@@ -52,6 +94,7 @@ class MarkovStats():
 
         del self.__bigram_hierachical_counter
         del self.__unigram_counter
+
 
 
     def get_bigram_conditional_prob(self,w1,w2):
@@ -192,7 +235,7 @@ class LanguageModel():
             cc += 1
             if cc %100 == 0:
                 print "\r\t\t\t%s"%cc,
-            if cc >=10000000:
+            if cc >=config.MAX_SUBFILM_LINES:
                 break
             line = line.strip()
             qs = line.lower()
@@ -226,7 +269,7 @@ class LanguageModel():
             cc += 1
             if cc % 100 == 0:
                 print "\r\t\t\t%s" % cc,
-            if cc >= 900000:
+            if cc >= config.MAX_NEWS_SEN:
                 break
             line = line.strip()
             qs = line.lower()
