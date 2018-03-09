@@ -7,7 +7,10 @@ cdir = os.path.abspath(os.path.dirname(__file__))
 DATA_DIR = "/home/nda/Data/Data_NLP"
 DATA_SOURCE = "/home/nda/Data/Text/Articles"
 NEWS_SENTENCES_DATA = "Sentences_Lines.dat"
-SUBTITLES_DATA_SOURCCE = "sub_film.txt"
+#SUBTITLES_DATA_SOURCCE = "sub_film.txt"
+
+SUBTITLES_DATA_SOURCCE = "OpenSubtitles2016.txt"
+
 SUBTITLES_EXPORT_DATA = "norm_sub_film.dat"
 
 def export_subtitles():
@@ -28,6 +31,7 @@ def split_news_sentence():
     fin = open("%s/AllItemInfor.dat"%DATA_DIR, encoding="utf-8")
     sentences = []
     import sys
+    import utils
     sys.path.insert(0, '..')
     from spelling_corrector.vnspliter.sentence_spliter import SentenceSpliter
     spliter = SentenceSpliter()
@@ -45,6 +49,7 @@ def split_news_sentence():
         sens = spliter.split(doc)
         for sen in sens:
         #    sentences.append(sen)
+            sen = utils.norm_space_marker(sen)
             fout.write(u"%s\n"%sen)
     fin.close()
     fout.close()
@@ -52,5 +57,5 @@ def split_news_sentence():
 
 if __name__ == "__main__":
     #export_subtitles()
-    #split_news_sentence()
+    split_news_sentence()
     pass

@@ -294,13 +294,27 @@ class GeneralBareCorrector():
                         continue
         return bare_raw_sen,back_ref
 
-
+    def __check_back_accent(self,before,after):
+        before_tokens = before.split(" ")
+        after_tokens = after.split(" ")
+        if len(before_tokens) != len(after_tokens):
+            return " ".join(after_tokens)
+        back_accent_tokens = []
+        for i in xrange(len(after_tokens)):
+            if utils.accent2bare(before_tokens[i]) == after_tokens[i]:
+                back_accent_tokens.append(before_tokens[i])
+            else:
+                back_accent_tokens.append(after_tokens[i])
+        return " ".join(back_accent_tokens)
     def __fix_multi_markov(self, sen, skip_digit=True, new_true_vocab=""):
 
         sen = self.__fix_rule(sen)
         sen = self.__remove_accent_teencode(sen)
         _tokens = self.language_model.split_sentece(sen)
         back_ref = " ".join(_tokens)
+
+        before_tokens = " ".join(_tokens)
+        print "Before tokens: ",before_tokens
 
         tokens = []
         for token in _tokens:
@@ -384,7 +398,8 @@ class GeneralBareCorrector():
 
                 if max_idx >=0:
                     bare_raw_sen = reg_list[max_idx].sub(repl_list[max_idx],bare_raw_sen)
-
+        back_ref = self.__check_back_accent(before_tokens,bare_raw_sen)
+        print back_ref
         return bare_raw_sen,back_ref
 
 

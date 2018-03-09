@@ -2,10 +2,16 @@
 
 import cPickle as pickle
 
-
+import re
 import sys
 from io import open
 import numpy
+
+
+#END_MARKER_RE = re.compile(ur"(?<=\w)(?P<MARKER>[\,\.\;\?\:\!\”\"\)])(?=\s|$)", re.UNICODE)
+#START_MARKER_RE = re.compile(ur"(?<!\S)(?P<MARKER>[\(\“])(?=\w)",re.UNICODE)
+END_MARKER_RE = re.compile(ur"(?P<MARKER>[\,\.\;\?\:\!\”\"\)])", re.UNICODE)
+START_MARKER_RE = re.compile(ur"(?P<MARKER>[\(\“])",re.UNICODE)
 
 conv_dict = {u'a':u'a', u'á':u'a', u'à':u'a', u'ạ':u'a', u'ã':u'a', u'ả':u'a',
 			u'ă':u'a', u'ắ':u'a', u'ằ':u'a', u'ặ':u'a', u'ẵ':u'a', u'ẳ':u'a',
@@ -143,8 +149,18 @@ def merge_counting_dict(d1,d2):
             vv = 0
         d3[k] = vv + v
     return d3
+def norm_space_marker(sen):
+    sen = END_MARKER_RE.sub(" \g<MARKER>",sen)
+    sen = START_MARKER_RE.sub("\g<MARKER> ",sen)
+    return sen
+
 if __name__ == "__main__":
     s= accent2bare( u"mọt")
     #s2 = accent2bare(u"đk")
     #print lcs(s,s2)
+    #END_MARKER_RE = re.compile(ur"(?<=\w)(?P<MARKER>[\,\.\;\?\:\!\”\"\)])(?=\s|$)", re.UNICODE)
+
+    s = u"de toi! xem no (the nao) da. Dung khong?"
+    #s = END_MARKER_RE.sub(" \g<MARKER>",s)
+    print norm_space_marker(s)
     print s

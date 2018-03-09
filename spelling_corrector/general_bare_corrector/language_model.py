@@ -29,8 +29,8 @@ class MarkovStats():
         self.__bigram_sum = {}
 
         self.__MIN_PROB = 1e-5
-        self.__MIN_UNIGRAM_COUNTER = 2
-        self.__MIN_BIGRAM_COUNTER = 5
+        self.__MIN_UNIGRAM_COUNTER = config.MIN_UNIGRAM_COUNTER
+        self.__MIN_BIGRAM_COUNTER = config.MIN_BIGRAM_COUNTER
 
 
     def add_bigram(self,w1,w2):
