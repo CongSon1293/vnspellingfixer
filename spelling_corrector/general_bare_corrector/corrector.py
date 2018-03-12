@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import math
 import re
 
@@ -8,12 +10,12 @@ from language_model import LanguageModel
 import config
 
 N_TOP_CANDIDATES = 4
-SIZE_VARIANT = 2
+SIZE_VARIANT = 3
 G_N_TOP_RETURN = 2
 R_MARKER_REF = re.compile(ur"(?P<MARKER>[\`\'\^\?\~\*\(\)])")
 ACCENT_TEENCODE_REG = re.compile(ur"(?<=\S)[\`\'\^\?\~\*]")
-SPLITER_TOKENS = re.compile(ur"$|(\.\.\.)|(\!\!\!)|\.|\,|\?|\!|\;\(\)",re.UNICODE)
-
+SPLITER_TOKENS = re.compile(ur"$|(\.\.\.)|(\!\!\!)|\.|\,|\?|\!|\;|\(|\)|\|\{|\}|\[|\]|\“|\”",re.UNICODE)
+BEGIN_TOKENS = {u"“",u"(",u"{",u"["}
 class GeneralBareCorrector():
     def __init__(self,pre_vocab = True):
         print "Initializing GeneralBareCorrector..."
@@ -81,7 +83,7 @@ class GeneralBareCorrector():
                     return candidate,sorted_score[i][1]
 
 
-        if sorted_score[0][1] > .99:
+        if sorted_score[0][1] > config.MIN_CAND_SCORE:
             candidate = sorted_score[0][0]
             return candidate,sorted_score[0][1]
 
@@ -129,7 +131,7 @@ class GeneralBareCorrector():
             N_TOP_RETURN = min(len(candidates),N_TOP_RETURN)
             return candidates[:N_TOP_RETURN],scores[:N_TOP_RETURN]
         for i in xrange(VALID_SIZE):
-            if sorted_score[i][1] > .99:
+            if sorted_score[i][1] > config.MIN_CAND_SCORE:
                 candidate = sorted_score[i][0]
                 candidates.append(candidate)
                 scores.append(sorted_score[i][1])
@@ -154,14 +156,13 @@ class GeneralBareCorrector():
             corrector,back_ref = self.__fix_segment(segment,skip_digit, new_true_vocab,sen_nomial_vocab)
             correctors.append(corrector)
             back_refs.append(back_ref)
-        results_formatter = []
-        backref_formatter = []
-        for i in xrange(len(correctors)):
-            results_formatter.append("%s%s"%(correctors[i],spliters[i]))
-            backref_formatter.append("%s%s"%(back_refs[i],spliters[i]))
-        return " ".join(results_formatter)," ".join(backref_formatter)
-
-
+        #results_formatter = []
+        #backref_formatter = []
+        #for i in xrange(len(correctors)):
+        #    results_formatter.append("%s%s"%(correctors[i],spliters[i]))
+        #    backref_formatter.append("%s%s"%(back_refs[i],spliters[i]))
+        return self.__merge_sements_with_spliter(correctors,spliters),\
+               self.__merge_sements_with_spliter(back_refs,spliters)
 
 
     def __fix_segment(self,sen, skip_digit=True, new_true_vocab="",sen_nomial_vocab=""):
@@ -169,18 +170,6 @@ class GeneralBareCorrector():
             return sen,sen
         return self.__fix_multi_markov(sen, skip_digit=skip_digit, new_true_vocab=new_true_vocab,sen_nomial_vocab=sen_nomial_vocab)
 
-    def __split_segment_sentence(self,sen):
-        mo_segments = SPLITER_TOKENS.finditer(sen)
-        segments = []
-        spliters = []
-        start_index = 0
-        for mo in mo_segments:
-            segment = sen[start_index:mo.start()]
-            spliter = mo.group(0)
-            start_index = mo.start() + len(spliter)
-            segments.append(segment)
-            spliters.append(spliter)
-        return segments,spliters
 
     def __fix_multi_markov(self, sen, skip_digit=True, new_true_vocab="",sen_nomial_vocab=""):
 
@@ -275,7 +264,7 @@ class GeneralBareCorrector():
                 if max_idx >=0:
                     bare_raw_sen = reg_list[max_idx].sub(repl_list[max_idx],bare_raw_sen)
         back_ref = self.__check_back_accent(before_tokens,bare_raw_sen)
-        print back_ref
+        print "Back accent ref: ",back_ref
         return bare_raw_sen,back_ref
 
     def __create_sen_nomial_vocab(self,sen):
@@ -299,6 +288,30 @@ class GeneralBareCorrector():
                 back_accent_tokens.append(after_tokens[i])
         return " ".join(back_accent_tokens)
 
+    def __split_segment_sentence(self,sen):
+        mo_segments = SPLITER_TOKENS.finditer(sen)
+        segments = []
+        spliters = []
+        start_index = 0
+        for mo in mo_segments:
+            segment = sen[start_index:mo.start()]
+            spliter = mo.group(0)
+            start_index = mo.start() + len(spliter)
+            segments.append(segment)
+            spliters.append(spliter)
+        return segments,spliters
+
+    def __merge_sements_with_spliter(self,segments,spliters):
+        #print segments,spliters
+        results = []
+        for i in xrange(len(segments)):
+            spliter = spliters[i]
+            if spliter in BEGIN_TOKENS:
+                spliter = " "+spliter
+            else:
+                spliter = spliter + " "
+            results.append("%s%s"%(segments[i],spliter))
+        return "".join(results)
 
     def __remove_accent_teencode(self,sen):
         return ACCENT_TEENCODE_REG.sub("",sen)

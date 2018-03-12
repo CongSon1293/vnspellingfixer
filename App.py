@@ -38,8 +38,8 @@ def fix():
 
    sen = HTMLParser.HTMLParser().unescape(sen)
    #sen = sen.decode("utf-8")
-   fixed_res,_ = spelling_corrector.fix(sen)
-   return fixed_res
+   fixed_res,accent_ref = spelling_corrector.fix(sen)
+   return accent_ref
 
 @app.route('/accent',methods=['GET','POST'])
 def accent():
