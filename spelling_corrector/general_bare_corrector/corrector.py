@@ -12,6 +12,8 @@ SIZE_VARIANT = 2
 G_N_TOP_RETURN = 2
 R_MARKER_REF = re.compile(ur"(?P<MARKER>[\`\'\^\?\~\*])")
 ACCENT_TEENCODE_REG = re.compile(ur"(?<=\S)[\`\'\^\?\~\*]")
+SPLITER_TOKENS = re.compile(ur"$|(\.\.\.)|(\!\!\!)|\.|\,|\?|\!|\;",re.UNICODE)
+
 class GeneralBareCorrector():
     def __init__(self,pre_vocab = True):
         print "Initializing GeneralBareCorrector..."
@@ -141,12 +143,33 @@ class GeneralBareCorrector():
     def __fix_rule(self, sen):
         return self.rule_fix.replace(sen)
     def fix(self,sen, skip_digit=True, new_true_vocab=""):
+        segments,spliters = self.__split_segment_sentence(sen)
+        correctors = []
+        back_refs = []
+        for segment in segments:
+            corrector,back_ref = self.__fix_segment(segment,skip_digit, new_true_vocab)
+            correctors.append(corrector)
+            back_refs.append(back_ref)
+        results_formatter = []
+        backref_formatter = []
+        for i in xrange(len(correctors)):
+            results_formatter.append("%s%s"%(correctors[i],spliters[i]))
+            backref_formatter.append("%s%s"%(back_refs[i],spliters[i]))
+        return " ".join(results_formatter)," ".join(backref_formatter)
+
+
+
+
+    def __fix_segment(self,sen, skip_digit=True, new_true_vocab=""):
+        if len(sen) <= 3:
+            return sen,sen
         if config.USING_MARKOV == 1:
             return self.__fix_markov(sen, skip_digit=skip_digit, new_true_vocab=new_true_vocab)
         if config.USING_MARKOV == 2:
             return self.__fix_multi_markov(sen, skip_digit=skip_digit, new_true_vocab=new_true_vocab)
         else:
             return self.__fix_bigram(sen, skip_digit=skip_digit, new_true_vocab=new_true_vocab)
+
     def __fix_bigram(self, sen, skip_digit=True, new_true_vocab=""):
 
 
@@ -207,6 +230,20 @@ class GeneralBareCorrector():
                         continue
 
         return bare_raw_sen,back_ref
+
+
+    def __split_segment_sentence(self,sen):
+        mo_segments = SPLITER_TOKENS.finditer(sen)
+        segments = []
+        spliters = []
+        start_index = 0
+        for mo in mo_segments:
+            segment = sen[start_index:mo.start()]
+            spliter = mo.group(0)
+            start_index = mo.start() + len(spliter)
+            segments.append(segment)
+            spliters.append(spliter)
+        return segments,spliters
 
 
     def __fix_markov(self, sen, skip_digit=True, new_true_vocab=""):

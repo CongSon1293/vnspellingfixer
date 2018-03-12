@@ -1,5 +1,20 @@
 import re
-ACCENT_TEENCODE_REG = re.compile(ur"[\'\^\?\~\*\`]")
-sen = "To^j dda^u co' lo^~j gj` co* chu* ' "
-sen2 = ACCENT_TEENCODE_REG.sub("",sen)
-print sen2
+SPLITER_TOKENS = re.compile(ur"($|\.\.\.)|(\!\!\!)|\.|\,|\?|\!|\;",re.UNICODE)
+sen = "Toi muon di choi. Ban co muon khong dc? the thi tot."
+
+
+def __split_segment_sentence( sen):
+    mo_segments = SPLITER_TOKENS.finditer(sen)
+    segments = []
+    spliters = []
+    start_index = 0
+    for mo in mo_segments:
+        segment = sen[start_index:mo.start()]
+        spliter = mo.group(0)
+        start_index = mo.start() + len(spliter)
+        segments.append(segment)
+        spliters.append(spliter)
+
+    return segments, spliters
+
+print __split_segment_sentence(sen)
