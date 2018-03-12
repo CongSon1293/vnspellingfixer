@@ -331,7 +331,10 @@ class LanguageModel():
 
         return utils.get_zero_dict(self.true_single_accent_vocab, word)
 
-    def check_true_single_bare_vocab(self,word,skip_digit=True,new_true_vocab=""):
+    def check_true_single_bare_vocab(self,word,skip_digit=True,new_true_vocab="",sen_nomial_vocab=""):
+        if sen_nomial_vocab != "":
+            if word in sen_nomial_vocab:
+                return 1
         if skip_digit:
             if DIGIT.search(word) != None:
                 return 1
