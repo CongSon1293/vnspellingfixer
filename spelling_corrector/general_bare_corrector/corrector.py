@@ -435,3 +435,9 @@ class Accumulator():
             self.__acm = self.__acm + obj
     def get(self):
         return self.__acm
+
+class Test():
+    def __init__(self):
+        self.lm = LanguageModel.load()
+    def run(self):
+        print len(self.lm.abbv_vocab_dict["tt"])
