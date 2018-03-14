@@ -127,6 +127,26 @@ def get_update_dict(d,k,v=0):
     except:
         d[k] = v
     return v
+def get_abbv_bigram(bigram):
+    pairs  = bigram.split(" ")
+    if len(pairs) >= 2:
+        abb = "%s%s" % (pairs[0][0], pairs[1][0])
+    else:
+        abb = pairs[0][0]
+    return abb
+
+def generate_hierachical_abbv_dict(ddict):
+    abbv_dict = {}
+    for k,v in ddict.iteritems():
+        abb  = get_abbv_bigram(k)
+        try:
+            d = abbv_dict[abb]
+        except:
+            d = {}
+            abbv_dict[abb] = d
+        d[k] = v
+    return abbv_dict
+
 def generate_hierachical_first_alphabet_dict(ddict):
     hierachical_f_dict = {}
     for k, v in ddict.iteritems():

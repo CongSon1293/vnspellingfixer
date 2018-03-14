@@ -8,8 +8,9 @@ from general_rules import GeneralRuleFixer
 from similarity_metrics import cal_sim_score
 from language_model import LanguageModel
 import config
-
+from datetime import datetime
 N_TOP_CANDIDATES = 4
+N_CUTOFF_VALID = 4
 SIZE_VARIANT = 3
 G_N_TOP_RETURN = 2
 R_MARKER_REF = re.compile(ur"(?P<MARKER>[\`\'\^\?\~\*\(\)])")
@@ -90,15 +91,19 @@ class GeneralBareCorrector():
         return wrong_bigram,0
 
     def __fix_wrong_multi_candidates(self, wrong_bigram,true_vocab_priority=True):
+
         d_candidates = {}
         c = wrong_bigram[0]
 
         if c == " ":
             return [wrong_bigram],[0]
         try:
+
             sub_dict = self.language_model.hierachical_first_char_dict[c]
         except:
             return [wrong_bigram],[0]
+        n_cal = 0
+        n_val = 0
 
         for candidate, counter in sub_dict.iteritems():
             if not self.__is_suitable_length(wrong_bigram,candidate):
@@ -107,15 +112,20 @@ class GeneralBareCorrector():
                 d_candidates[candidate]
             except:
                 sim_score = cal_sim_score(wrong_bigram, candidate, counter)
+                n_cal += 1
                 if sim_score < 0.7:
                     continue
+                if sim_score > 1.0:
+                    n_val += 1
                 d_candidates[candidate] = cal_sim_score(wrong_bigram, candidate, counter)
-
+                if n_val > N_CUTOFF_VALID:
+                    break
         if len(d_candidates) == 0:
             return [wrong_bigram],[0]
         sorted_score = utils.sort_dict(d_candidates)
 
-        print sorted_score[:3],len(sorted_score)
+        print wrong_bigram,sorted_score[:3],len(sorted_score),n_cal
+
         VALID_SIZE = min(len(sorted_score),N_TOP_CANDIDATES)
         N_TOP_RETURN = G_N_TOP_RETURN
         candidates = []
@@ -142,15 +152,94 @@ class GeneralBareCorrector():
 
         return [wrong_bigram],[0]
 
+    def __fix_wrong_multi_candidates_abb(self, wrong_bigram, true_vocab_priority=True):
+
+        d_candidates = {}
+        n_cal = Accumulator()
+
+        def __update_candidates(sub_dict,skip_d = ""):
+            if sub_dict == 0 or len(sub_dict) == 0:
+                return 0
+            n_val = 0
+            for candidate, counter in sub_dict.iteritems():
+                abb = utils.get_abbv_bigram(candidate)
+                if abb == skip_d:
+                    continue
+                if not self.__is_suitable_length(wrong_bigram, candidate):
+                    continue
+                try:
+                    d_candidates[candidate]
+                except:
+                    sim_score = cal_sim_score(wrong_bigram, candidate, counter)
+                    n_cal.add(1)
+                    if sim_score < 0.7:
+                        continue
+                    if sim_score > 1.0:
+                        n_val += 1
+                    d_candidates[candidate] = cal_sim_score(wrong_bigram, candidate, counter)
+                    if n_val > N_CUTOFF_VALID:
+                        break
+            return n_val
+
+        abb = utils.get_abbv_bigram(wrong_bigram)
+        abb_d = utils.get_zero_dict(self.language_model.abbv_vocab_dict,abb)
+
+        n_val = __update_candidates(abb_d)
+        if n_val <= 0:
+            c = wrong_bigram[0]
+
+            if c == " ":
+                return [wrong_bigram], [0]
+            try:
+
+                sub_dict = self.language_model.hierachical_first_char_dict[c]
+                __update_candidates(sub_dict,abb)
+
+            except:
+                return [wrong_bigram], [0]
+
+        if len(d_candidates) == 0:
+            return [wrong_bigram], [0]
+        sorted_score = utils.sort_dict(d_candidates)
+
+        print wrong_bigram, sorted_score[:3], len(sorted_score), n_cal.get()
+
+        VALID_SIZE = min(len(sorted_score), N_TOP_CANDIDATES)
+        N_TOP_RETURN = G_N_TOP_RETURN
+        candidates = []
+        scores = []
+        if true_vocab_priority:
+            for i in xrange(VALID_SIZE):
+                candidate = sorted_score[i][0]
+                if self.language_model.check_true_bi_bare_vocab(candidate):
+                    candidates.append(candidate)
+                    scores.append(sorted_score[i][1])
+                    # return candidate,sorted_score[i][1]
+        if len(candidates) >= 1:
+            N_TOP_RETURN = min(len(candidates), N_TOP_RETURN)
+            return candidates[:N_TOP_RETURN], scores[:N_TOP_RETURN]
+        for i in xrange(VALID_SIZE):
+            if sorted_score[i][1] > config.MIN_CAND_SCORE:
+                candidate = sorted_score[i][0]
+                candidates.append(candidate)
+                scores.append(sorted_score[i][1])
+        N_TOP_RETURN = min(len(candidates), N_TOP_RETURN)
+
+        if N_TOP_RETURN > 0:
+            return candidates[:N_TOP_RETURN], scores[:N_TOP_RETURN]
+
+        return [wrong_bigram], [0]
 
     def __fix_rule(self, sen):
         return self.rule_fix.replace(sen)
 
 
     def fix(self,sen, skip_digit=True, new_true_vocab=""):
+        begin = datetime.now()
         segments,spliters = self.__split_segment_sentence(sen)
         correctors = []
         back_refs = []
+        self.acm = Accumulator()
         for segment in segments:
             sen_nomial_vocab = self.__create_sen_nomial_vocab(segment)
             corrector,back_ref = self.__fix_segment(segment,skip_digit, new_true_vocab,sen_nomial_vocab)
@@ -161,6 +250,8 @@ class GeneralBareCorrector():
         #for i in xrange(len(correctors)):
         #    results_formatter.append("%s%s"%(correctors[i],spliters[i]))
         #    backref_formatter.append("%s%s"%(back_refs[i],spliters[i]))
+        self.__get_runtime(begin,mess="Total")
+        print "\tSearching candidates time: ",self.acm.get()
         return self.__merge_sements_with_spliter(correctors,spliters),\
                self.__merge_sements_with_spliter(back_refs,spliters)
 
@@ -170,6 +261,11 @@ class GeneralBareCorrector():
             return sen,sen
         return self.__fix_multi_markov(sen, skip_digit=skip_digit, new_true_vocab=new_true_vocab,sen_nomial_vocab=sen_nomial_vocab)
 
+
+    def __get_runtime(self,start,mess=""):
+        current = datetime.now()
+        print "\tRuntime %s"%mess,(current-start)
+        return current-start
 
     def __fix_multi_markov(self, sen, skip_digit=True, new_true_vocab="",sen_nomial_vocab=""):
 
@@ -206,9 +302,16 @@ class GeneralBareCorrector():
                     bigram_next = "%s %s"%(tokens[i],tokens[i+1])
 
                 if bigram_back != None:
-                    fix_bigram_backs,fix_code_backs  = self.__fix_wrong_multi_candidates(bigram_back,true_vocab_priority=False)
+                    begin = datetime.now()
+
+                    fix_bigram_backs,fix_code_backs  = self.__fix_wrong_multi_candidates_abb(bigram_back,true_vocab_priority=False)
+                    rt = self.__get_runtime(begin)
+                    self.acm.add(rt)
                 if bigram_next != None:
-                    fix_bigram_nexts,fix_code_nexts = self.__fix_wrong_multi_candidates(bigram_next,true_vocab_priority=False)
+                    begin = datetime.now()
+                    fix_bigram_nexts,fix_code_nexts = self.__fix_wrong_multi_candidates_abb(bigram_next,true_vocab_priority=False)
+                    rt = self.__get_runtime(begin)
+                    self.acm.add(rt)
                 print fix_bigram_backs,fix_code_backs
                 print fix_bigram_nexts,fix_code_nexts
 
@@ -321,3 +424,14 @@ class GeneralBareCorrector():
 
     def __fix_regex_marker_pattern(self,src):
         return R_MARKER_REF.sub(ur"\\\g<MARKER>",src)
+
+class Accumulator():
+    def __init__(self):
+        self.__acm = ""
+    def add(self,obj):
+        if self.__acm == "":
+            self.__acm = obj
+        else:
+            self.__acm = self.__acm + obj
+    def get(self):
+        return self.__acm
