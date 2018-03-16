@@ -306,8 +306,7 @@ class LanguageModel():
         self.news_bigram_counter = utils.merge_counting_dict(self.news_bigram_counter,
                                                              self.subtitle_bigram)
         self.__append_vocabulary_bigram()
-        #self.hierachical_first_char_dict = utils.generate_hierachical_first_alphabet_dict(self.news_bigram_counter)
-        self.abbv_vocab_dict = utils.generate_hierachical_abbv_dict(self.news_bigram_counter)
+        self.abbv_two_level_dict = utils.generate_hierachical_abb_two_level_dict(self.news_bigram_counter)
     def load_extended_true_bivocab(self,path="models/data/inp/extended_bivocab.dat"):
         path = "%s/%s"%(cdir,path)
         f = open(path,"r")

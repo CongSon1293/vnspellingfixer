@@ -10,9 +10,10 @@ from language_model import LanguageModel
 import config
 from datetime import datetime
 N_TOP_CANDIDATES = 4
-N_CUTOFF_VALID = 4
+
 SIZE_VARIANT = 4
-G_N_TOP_RETURN = 2
+G_N_TOP_RETURN = 3
+N_CUTOFF_VALID = G_N_TOP_RETURN
 R_MARKER_REF = re.compile(ur"(?P<MARKER>[\`\'\^\?\~\*\(\)])")
 ACCENT_TEENCODE_REG = re.compile(ur"(?<=\S)[\`\'\^\?\~\*]")
 SPLITER_TOKENS = re.compile(ur"$|(\.\.\.)|(\!\!\!)|\.|\,|\?|\!|\;|\(|\)|\|\{|\}|\[|\]|\“|\”",re.UNICODE)
@@ -152,22 +153,17 @@ class GeneralBareCorrector():
 
         return [wrong_bigram],[0]
 
-    def __fix_wrong_multi_candidates_abb(self, wrong_bigram, true_vocab_priority=True):
+    def __fix_wrong_multi_candidates_abb(self, wrong_bigram, true_vocab_priority=False):
 
         d_candidates = {}
         n_cal = Accumulator()
 
-        def __update_candidates(sub_dict,skip_d = ""):
+        def __update_candidates(sub_dict):
             if sub_dict == 0 or len(sub_dict) == 0:
                 return 0
             n_val = 0
             for candidate, counter in sub_dict.iteritems():
                 #print candidate
-                #if candidate == u"thu nghiem":
-                #    print "Here"
-                abb = utils.get_abbv_bigram(candidate)
-                if abb == skip_d:
-                    continue
                 if not self.__is_suitable_length(wrong_bigram, candidate):
                     continue
                 try:
@@ -179,27 +175,28 @@ class GeneralBareCorrector():
                         continue
                     if sim_score > 1.0:
                         n_val += 1
-                    d_candidates[candidate] = cal_sim_score(wrong_bigram, candidate, counter)
+                    d_candidates[candidate] = sim_score
                     if n_val > N_CUTOFF_VALID:
                         break
             return n_val
 
-        abb = utils.get_abbv_bigram(wrong_bigram)
-        abb_d = utils.get_zero_dict(self.language_model.abbv_vocab_dict,abb)
+        a,b = utils.get_abbv_chars(wrong_bigram)
+
+        abb_d = utils.get_abb_two_level_dict(self.language_model.abbv_two_level_dict,a,b)
 
         n_val = __update_candidates(abb_d)
-        if n_val <= 0:
-            c = wrong_bigram[0]
 
-            if c == " ":
-                return [wrong_bigram], [0]
-            try:
+        print "First ab: ",n_val,len(d_candidates),n_cal.get()
 
-                sub_dict = self.language_model.hierachical_first_char_dict[c]
-                __update_candidates(sub_dict,abb)
+        #if n_val <= 0
+        if len(d_candidates)==0:
+            sub_dict_a = utils.get_zero_dict(self.language_model.abbv_two_level_dict,a)
+            if a != 0:
+                for b2,sub_b in sub_dict_a.iteritems():
+                    if b2 == b:
+                        continue
+                    __update_candidates(sub_b)
 
-            except:
-                return [wrong_bigram], [0]
 
         if len(d_candidates) == 0:
             return [wrong_bigram], [0]

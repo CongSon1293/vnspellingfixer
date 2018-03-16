@@ -134,6 +134,13 @@ def get_abbv_bigram(bigram):
     else:
         abb = pairs[0][0]
     return abb
+def get_abbv_chars(bigram):
+    pairs = bigram.split(" ")
+    if len(pairs) >= 2:
+        a,b = pairs[0][0],pairs[1][0]
+    else:
+        a,b = pairs[0][0],""
+    return a,b
 
 def generate_hierachical_abbv_dict(ddict):
     abbv_dict = {}
@@ -146,6 +153,23 @@ def generate_hierachical_abbv_dict(ddict):
             abbv_dict[abb] = d
         d[k] = v
     return abbv_dict
+
+def generate_hierachical_abb_two_level_dict(ddict):
+    abbv_dict = {}
+    for k,v in ddict.iteritems():
+        a,b  = get_abbv_chars(k)
+        sub_a = get_update_dict(abbv_dict,a,{})
+        sub_b = get_update_dict(sub_a,b,{})
+        sub_b[k] = v
+    return abbv_dict
+
+def get_abb_two_level_dict(ddict,a,b):
+    sub_a = get_zero_dict(ddict,a)
+    if sub_a == 0:
+        return 0
+    sub_b = get_zero_dict(sub_a,b)
+    return sub_b
+
 
 def generate_hierachical_first_alphabet_dict(ddict):
     hierachical_f_dict = {}
