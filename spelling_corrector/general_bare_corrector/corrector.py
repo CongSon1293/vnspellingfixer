@@ -11,7 +11,7 @@ import config
 from datetime import datetime
 N_TOP_CANDIDATES = 4
 N_CUTOFF_VALID = 4
-SIZE_VARIANT = 3
+SIZE_VARIANT = 4
 G_N_TOP_RETURN = 2
 R_MARKER_REF = re.compile(ur"(?P<MARKER>[\`\'\^\?\~\*\(\)])")
 ACCENT_TEENCODE_REG = re.compile(ur"(?<=\S)[\`\'\^\?\~\*]")
@@ -162,6 +162,9 @@ class GeneralBareCorrector():
                 return 0
             n_val = 0
             for candidate, counter in sub_dict.iteritems():
+                #print candidate
+                #if candidate == u"thu nghiem":
+                #    print "Here"
                 abb = utils.get_abbv_bigram(candidate)
                 if abb == skip_d:
                     continue

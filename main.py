@@ -47,6 +47,4 @@ def domain_fix():
 
 if __name__ == "__main__":
     #general_fix(pre_vocab=True)
-    from spelling_corrector.general_bare_corrector.corrector import Test
-    t = Test()
-    t.run()
+    domain_fix()

@@ -294,9 +294,18 @@ class LanguageModel():
 
         print "\t\t: After fitlering: %s" % len(self.news_bigram_counter)
         #self.hierachical_first_char_dict = utils.generate_hierachical_first_alphabet_dict(self.news_bigram_counter)
+    def __append_vocabulary_bigram(self):
+        for w,c in self.true_bi_bare_vocab.iteritems():
+            c0 = utils.get_zero_dict(self.news_bigram_counter,w)
+            c0 += c
+            if c0 < DMIN:
+                c0 = DMIN
+            self.news_bigram_counter[w] = c0
+
     def __merge_bigram_counter(self):
         self.news_bigram_counter = utils.merge_counting_dict(self.news_bigram_counter,
                                                              self.subtitle_bigram)
+        self.__append_vocabulary_bigram()
         #self.hierachical_first_char_dict = utils.generate_hierachical_first_alphabet_dict(self.news_bigram_counter)
         self.abbv_vocab_dict = utils.generate_hierachical_abbv_dict(self.news_bigram_counter)
     def load_extended_true_bivocab(self,path="models/data/inp/extended_bivocab.dat"):
