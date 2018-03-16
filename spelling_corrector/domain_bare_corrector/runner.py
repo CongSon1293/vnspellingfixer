@@ -25,4 +25,5 @@ if __name__ == "__main__":
     #run_first_wrong_unigram_stats()
     #run_second_rule_unigram_matching()
     #run_third_stats_bare_bigram()
-    run_fourth_stats_bare_bigram_fixing()
+    #run_fourth_stats_bare_bigram_fixing()
+    pass

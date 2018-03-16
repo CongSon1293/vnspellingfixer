@@ -41,6 +41,7 @@ def domain_fix():
     while True:
         inp = raw_input("Enter: ")
         if len(inp) > 4:
+            inp = unicode(inp,encoding="utf-8")
             fix, back_ref = domain_corrector.fix(inp)
             print fix
 
