@@ -16,6 +16,7 @@ DIGIT = re.compile(ur"\d")
 REMOVE_CHAR = re.compile(ur"[\"\(\)\?\:\“]",re.UNICODE)
 MISS_SPACE = re.compile(ur"(?P<BF>\w)(?P<GG>,)(?P<AT>\w)",re.UNICODE)
 DMIN = 5
+D_WEIGHT_TRUE_BIGRAM = 50
 
 
 class MarkovStats():
@@ -298,8 +299,8 @@ class LanguageModel():
         for w,c in self.true_bi_bare_vocab.iteritems():
             c0 = utils.get_zero_dict(self.news_bigram_counter,w)
             c0 += c
-            if c0 < DMIN:
-                c0 = DMIN
+            if c0 < D_WEIGHT_TRUE_BIGRAM:
+                c0 = D_WEIGHT_TRUE_BIGRAM
             self.news_bigram_counter[w] = c0
 
     def __merge_bigram_counter(self):
