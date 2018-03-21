@@ -118,10 +118,14 @@ class MarkovStats():
         return self.get_prob_tokens(tokens)
     def get_prob_tokens(self,tokens):
         #print "Get prob tokens: ",tokens
-        prob = self.get_unigram_prob(tokens[0])
+        #prob = self.get_unigram_prob(tokens[0])
+        #print tokens[0],":",prob
+        prob = 1
         for i in xrange(0, len(tokens)-1):
             #print self.get_bigram_conditional_prob(tokens[i],tokens[i + 1])
-            prob *= self.get_bigram_conditional_prob(tokens[i], tokens[i + 1])
+            s = self.get_bigram_conditional_prob(tokens[i], tokens[i + 1])
+            #print "%s %s: %s"%(tokens[i],tokens[i+1],s)
+            prob *= s
         return prob
 
 class LanguageModel():
