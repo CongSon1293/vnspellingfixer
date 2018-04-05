@@ -58,10 +58,18 @@ if __name__ == '__main__':
    optparser.add_option(
       "-M","--mode", default="general"
    )
+   optparser.add_option(
+       "-D","--debug",default="0",type="int"
+   )
    opts = optparser.parse_args()[0]
    port = opts.port
 
    mode = opts.mode
+   print opts
+
+   from spelling_corrector.general_bare_corrector import config
+   config.IS_DEBUG = opts.debug
+
    is_genaral = False
    if mode == "general":
       is_genaral = True

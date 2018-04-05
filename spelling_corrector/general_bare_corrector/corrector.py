@@ -75,7 +75,8 @@ class GeneralBareCorrector():
             return wrong_bigram,0
         sorted_score = utils.sort_dict(d_candidates)
 
-        print sorted_score[:3],len(sorted_score)
+        if config.IS_DEBUG:
+            print sorted_score[:3],len(sorted_score)
         VALID_SIZE = min(len(sorted_score),N_TOP_CANDIDATES)
 
         if true_vocab_priority:
@@ -125,7 +126,8 @@ class GeneralBareCorrector():
             return [wrong_bigram],[0]
         sorted_score = utils.sort_dict(d_candidates)
 
-        print wrong_bigram,sorted_score[:3],len(sorted_score),n_cal
+        if config.IS_DEBUG:
+            print wrong_bigram,sorted_score[:3],len(sorted_score),n_cal
 
         VALID_SIZE = min(len(sorted_score),N_TOP_CANDIDATES)
         N_TOP_RETURN = G_N_TOP_RETURN
@@ -186,7 +188,8 @@ class GeneralBareCorrector():
 
         n_val = __update_candidates(abb_d)
 
-        print "First ab: ",n_val,len(d_candidates),n_cal.get()
+        if config.IS_DEBUG:
+            print "First ab: ",n_val,len(d_candidates),n_cal.get()
 
         #if n_val <= 0
         if len(d_candidates)==0:
@@ -202,7 +205,8 @@ class GeneralBareCorrector():
             return [wrong_bigram], [0]
         sorted_score = utils.sort_dict(d_candidates)
 
-        print wrong_bigram, sorted_score[:3], len(sorted_score), n_cal.get()
+        if config.IS_DEBUG:
+            print wrong_bigram, sorted_score[:3], len(sorted_score), n_cal.get()
 
         VALID_SIZE = min(len(sorted_score), N_TOP_CANDIDATES)
         N_TOP_RETURN = G_N_TOP_RETURN
@@ -251,7 +255,8 @@ class GeneralBareCorrector():
         #    results_formatter.append("%s%s"%(correctors[i],spliters[i]))
         #    backref_formatter.append("%s%s"%(back_refs[i],spliters[i]))
         self.__get_runtime(begin,mess="Total")
-        print "\tSearching candidates time: ",self.acm.get()
+        if config.IS_DEBUG:
+            print "\tSearching candidates time: ",self.acm.get()
         return self.__merge_sements_with_spliter(correctors,spliters),\
                self.__merge_sements_with_spliter(back_refs,spliters)
 
@@ -264,7 +269,8 @@ class GeneralBareCorrector():
 
     def __get_runtime(self,start,mess=""):
         current = datetime.now()
-        print "\tRuntime %s"%mess,(current-start)
+        if config.IS_DEBUG:
+            print "\tRuntime %s"%mess,(current-start)
         return current-start
 
     def __fix_multi_markov(self, sen, skip_digit=True, new_true_vocab="",sen_nomial_vocab=""):
@@ -275,7 +281,8 @@ class GeneralBareCorrector():
         back_ref = " ".join(_tokens)
 
         before_tokens = " ".join(_tokens)
-        print "Before tokens: ",before_tokens
+        if config.IS_DEBUG:
+            print "Before tokens: ",before_tokens
 
         tokens = []
         for token in _tokens:
@@ -288,7 +295,8 @@ class GeneralBareCorrector():
 
         for i in xrange(len(tokens)):
             if not self.language_model.check_true_single_bare_vocab(tokens[i], skip_digit, new_true_vocab,sen_nomial_vocab):
-                print "Wrong token: ",tokens[i]
+                if config.IS_DEBUG:
+                    print "Wrong token: ",tokens[i]
 
                 bigram_back = None
                 bigram_next = None
@@ -312,8 +320,9 @@ class GeneralBareCorrector():
                     fix_bigram_nexts,fix_code_nexts = self.__fix_wrong_multi_candidates_abb(bigram_next,true_vocab_priority=False)
                     rt = self.__get_runtime(begin)
                     self.acm.add(rt)
-                print fix_bigram_backs,fix_code_backs
-                print fix_bigram_nexts,fix_code_nexts
+                if config.IS_DEBUG:
+                    print fix_bigram_backs,fix_code_backs
+                    print fix_bigram_nexts,fix_code_nexts
 
 
                 reg_list = []
@@ -339,7 +348,8 @@ class GeneralBareCorrector():
                         reg_list.append(reg_back)
                         repl_list.append(fix_bigram_back)
                         can_list.append(bare_back_rep)
-                        print fix_bigram_back,":->",bare_back_rep
+                        if config.IS_DEBUG:
+                            print fix_bigram_back,":->",bare_back_rep
                 #print "Fix code nexts",fix_code_nexts
                 if len(fix_code_nexts) > 0 and fix_code_nexts[0] > 0:
                     next_pattern = self.__fix_regex_marker_pattern(bigram_next)
@@ -352,14 +362,16 @@ class GeneralBareCorrector():
                         repl_list.append(fix_bigram_next)
                         can_list.append(bare_sub_sen_next)
 
-                        print fix_bigram_next,":->",bare_sub_sen_next
+                        if config.IS_DEBUG:
+                            print fix_bigram_next,":->",bare_sub_sen_next
 
 
                 max_idx = -1
                 max_markov_score = -100000
                 for i in xrange(len(can_list)):
                     markov_score = self.language_model.get_prob_sentence(can_list[i])
-                    print can_list[i],markov_score
+                    if config.IS_DEBUG:
+                        print can_list[i],markov_score
                     if markov_score > max_markov_score:
                         max_markov_score = markov_score
                         max_idx = i
@@ -367,7 +379,8 @@ class GeneralBareCorrector():
                 if max_idx >=0:
                     bare_raw_sen = reg_list[max_idx].sub(repl_list[max_idx],bare_raw_sen)
         back_ref = self.__check_back_accent(before_tokens,bare_raw_sen)
-        print "Back accent ref: ",back_ref
+        if config.IS_DEBUG:
+            print "Back accent ref: ",back_ref
         return bare_raw_sen,back_ref
 
     def __create_sen_nomial_vocab(self,sen):
