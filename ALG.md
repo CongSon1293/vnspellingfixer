@@ -72,18 +72,18 @@ def cal_sim_score(src, cand, ref_score=0):
 ## Thống kê một số luật thay thế từ dữ liệu
 
 Nguyên tắc: 
-B0: Sử dụng tập luật biết trước để thay thế vào dữ liệu
-B1: Xác định từ sai W(rong)
-B2: Thống kê bigram của các từ đứng trước từ sai B(efore) W và từ đứng sau: W A(fter)
-B3: Lại thống kê bigram : các từ đứng sau của B và các từ đứng trước của A, tạo thành tập ứng cử viên đúng T(rue) cho từ sai W
-B4: Xếp hạng lại các từ ứng cử viên T, sắp xếp theo khoảng cách từ, tạo ra tập luật thô
-B5: Sức cơm =))
+1. : Sử dụng tập luật biết trước để thay thế vào dữ liệu
+2. : Xác định từ sai W(rong)
+3. : Thống kê bigram của các từ đứng trước từ sai B(efore) W và từ đứng sau: W A(fter)
+4. : Lại thống kê bigram : các từ đứng sau của B và các từ đứng trước của A, tạo thành tập ứng cử viên đúng T(rue) cho từ sai W
+5. : Xếp hạng lại các từ ứng cử viên T, sắp xếp theo khoảng cách từ, tạo ra tập luật thô
+6. : Sức cơm =))
 
 
 ## Học không giám sát:
 
-B0: Sử dụng các luật có được để thay thế vào dữ liệu
-B1: Tạo language model cho bộ dữ liệu: Gồm xác suất xuất hiện của các từ,xác suất xuất hiện của từ sau theo từ đứng trước p(w(after)|w(before))
-B2: Xác định các từ sai (theo định nghĩa của từ sai)
-B3: Tìm ứng cử viên của từ sai: Duyệt theo từ điển, chọn các từ sao cho khoảng cách tới từ sai là gần nhất ( chọn top 3 từ)
-B4: Tạo chuỗi markop +- 2 cho các ứng cử viên của từ sai, tính xác suất của chuỗi và chọn ứng cử viên cho xác suất lớn nhất
+1. : Sử dụng các luật có được để thay thế vào dữ liệu
+2. : Tạo language model cho bộ dữ liệu: Gồm xác suất xuất hiện của các từ,xác suất xuất hiện của từ sau theo từ đứng trước p(w(after)|w(before))
+3. : Xác định các từ sai (theo định nghĩa của từ sai)
+4. : Tìm ứng cử viên của từ sai: Duyệt theo từ điển, chọn các từ sao cho khoảng cách tới từ sai là gần nhất ( chọn top 3 từ)
+5. : Tạo chuỗi markop +- 2 cho các ứng cử viên của từ sai, tính xác suất của chuỗi và chọn ứng cử viên cho xác suất lớn nhất
